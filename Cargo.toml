@@ -1,0 +1,45 @@
+[package]
+name = "fmby"
+version = "0.1.0"
+edition = "2024"
+authors = ["Exefer"]
+repository = "https://github.com/exefer/fmby"
+description = "A remake of FMHY/bot"
+readme = "README.md"
+publish = false
+
+[workspace]
+members = ["migration", "entity"]
+
+[workspace.dependencies]
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+sea-orm = { version = "1.1.0", default-features = false, features = [
+    "sqlx-postgres",
+    "runtime-tokio",
+    "with-json",
+] }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dependencies]
+serde = { workspace = true }
+tokio = { workspace = true }
+sea-orm = { workspace = true }
+migration = { path = "migration" }
+entity = { path = "entity" }
+serenity = "0.12.4"
+dotenvy = "0.15.7"
+tracing = "0.1.41"
+serde_json = "1.0.142"
+anyhow = "1.0.99"
+thiserror = "2.0.15"
+regex = "1.11.1"
+poise = "0.6.1"
+reqwest = "0.12.23"
+pulldown-cmark = "0.13.0"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
