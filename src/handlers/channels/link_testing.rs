@@ -3,9 +3,10 @@ use crate::{
     constants::{DevChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
-use entity::wiki_urls::Entity as WikiUrls;
+use entity::prelude::*;
 use serenity::all::*;
 use std::collections::HashSet;
+
 pub struct LinkTestingHandler;
 
 impl LinkTestingHandler {

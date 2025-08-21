@@ -4,14 +4,9 @@ use crate::{
     shared::FmbyDatabase,
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
 };
-use entity::{
-    sea_orm_active_enums::WikiUrlStatus,
-    wiki_urls::{self, Entity as WikiUrls},
-};
-use futures::future::BoxFuture;
+use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use migration::OnConflict;
-use sea_orm::{ActiveValue::*, Iterable, sea_query};
-use sea_orm::{TryInsertResult, prelude::*};
+use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*};
 use serenity::all::*;
 
 pub struct AddLinksHandler;

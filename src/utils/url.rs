@@ -1,13 +1,10 @@
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 use crate::utils::db::ChunkSize;
-use entity::sea_orm_active_enums::WikiUrlStatus;
-use entity::wiki_urls::{self, Entity as WikiUrls};
+use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use migration::OnConflict;
 use pulldown_cmark::{Event, Tag, TagEnd};
 use regex::Regex;
-use sea_orm::ActiveValue::*;
-use sea_orm::TransactionTrait;
-use sea_orm::prelude::*;
+use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*};
 
 #[derive(Debug, Clone)]
 pub struct WikiLink {

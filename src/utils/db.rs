@@ -1,4 +1,4 @@
-use entity::wiki_urls::{self, Entity as WikiUrls};
+use entity::{prelude::*, wiki_urls};
 use sea_orm::Iterable;
 use sea_orm::prelude::*;
 use serenity::all::*;
