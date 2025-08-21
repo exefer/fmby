@@ -4,20 +4,20 @@ use crate::{
     utils::url::extract_urls,
 };
 use entity::prelude::*;
-use serenity::all::*;
+use poise::serenity_prelude::{self as serenity, Mentionable};
 use std::collections::HashSet;
 
 pub struct LinkTestingHandler;
 
 impl LinkTestingHandler {
-    fn is_thread_in_link_testing(thread: &GuildChannel) -> bool {
+    fn is_thread_in_link_testing(thread: &serenity::GuildChannel) -> bool {
         thread.parent_id.map(|c| c.get()).unwrap_or_default() == DevChannel::LinkTesting.id()
     }
 }
 
-#[async_trait]
-impl EventHandler for LinkTestingHandler {
-    async fn thread_create(&self, ctx: Context, thread: GuildChannel) {
+#[serenity::async_trait]
+impl serenity::EventHandler for LinkTestingHandler {
+    async fn thread_create(&self, ctx: serenity::Context, thread: serenity::GuildChannel) {
         let is_new_testing_thread =
             Self::is_thread_in_link_testing(&thread) && thread.member_count == Some(1);
 
@@ -26,7 +26,7 @@ impl EventHandler for LinkTestingHandler {
         };
 
         let message = thread
-            .messages(&ctx.http, GetMessages::new().limit(1))
+            .messages(&ctx.http, serenity::GetMessages::new().limit(1))
             .await
             .map(|msgs| msgs.first().cloned())
             .unwrap_or(None);
@@ -52,7 +52,12 @@ impl EventHandler for LinkTestingHandler {
         }
     }
 
-    async fn thread_update(&self, ctx: Context, old: Option<GuildChannel>, new: GuildChannel) {
+    async fn thread_update(
+        &self,
+        ctx: serenity::Context,
+        old: Option<serenity::GuildChannel>,
+        new: serenity::GuildChannel,
+    ) {
         if !Self::is_thread_in_link_testing(&new) {
             return;
         }

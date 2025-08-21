@@ -26,7 +26,6 @@ tokio = { workspace = true }
 sea-orm = { workspace = true }
 migration = { path = "migration" }
 entity = { path = "entity" }
-serenity = "0.12.4"
 dotenvy = "0.15.7"
 tracing = "0.1.41"
 serde_json = "1.0.142"

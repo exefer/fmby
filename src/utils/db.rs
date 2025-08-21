@@ -1,9 +1,8 @@
 use entity::{prelude::*, wiki_urls};
-use sea_orm::Iterable;
-use sea_orm::prelude::*;
-use serenity::all::*;
+use poise::serenity_prelude as serenity;
+use sea_orm::{Iterable, prelude::*};
 
-#[async_trait]
+#[serenity::async_trait]
 pub trait WikiUrlFinder {
     /// Look up multiple wiki URL entries in a single database query.
     ///
@@ -49,7 +48,7 @@ pub trait WikiUrlFinder {
     ) -> Result<Vec<wiki_urls::Model>, DbErr>;
 }
 
-#[async_trait]
+#[serenity::async_trait]
 impl WikiUrlFinder for Vec<String> {
     async fn find_wiki_url_entries(
         &self,
@@ -66,7 +65,7 @@ impl WikiUrlFinder for Vec<String> {
     }
 }
 
-#[async_trait]
+#[serenity::async_trait]
 impl WikiUrlFinder for [String] {
     async fn find_wiki_url_entries(
         &self,

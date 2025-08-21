@@ -9,7 +9,7 @@ macro_rules! generate_message_getters {
         impl $struct_ty {
             $(
                 pub async fn $fn_name(
-                    data: &std::sync::Arc<tokio::sync::RwLock<serenity::prelude::TypeMap>>,
+                    data: &std::sync::Arc<tokio::sync::RwLock<poise::serenity_prelude::prelude::TypeMap>>,
                     $(
                         $(
                             $placeholder: impl std::fmt::Display,

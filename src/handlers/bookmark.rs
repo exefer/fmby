@@ -1,10 +1,10 @@
-use serenity::all::*;
+use poise::serenity_prelude as serenity;
 
 pub struct BookmarkHandler;
 
-#[async_trait]
-impl EventHandler for BookmarkHandler {
-    async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
+#[serenity::async_trait]
+impl serenity::EventHandler for BookmarkHandler {
+    async fn reaction_add(&self, ctx: serenity::Context, reaction: serenity::Reaction) {
         let user = match reaction.user(&ctx.http).await {
             Ok(u) if !u.bot => u,
             _ => return,
@@ -24,27 +24,32 @@ impl EventHandler for BookmarkHandler {
             match user
                 .direct_message(
                     &ctx.http,
-                    CreateMessage::new().embed(
-                        CreateEmbed::new()
-                            .author(CreateEmbedAuthor::new(&message.author.name).icon_url(&avatar))
+                    serenity::CreateMessage::new().embed(
+                        serenity::CreateEmbed::new()
+                            .author(
+                                serenity::CreateEmbedAuthor::new(&message.author.name)
+                                    .icon_url(&avatar),
+                            )
                             .description(&message.content)
                             .field(
                                 "Jump",
                                 format!("[Go to Message!]({})", message.link()),
                                 false,
                             )
-                            .footer(CreateEmbedFooter::new(format!(
+                            .footer(serenity::CreateEmbedFooter::new(format!(
                                 "Guild: {} | Channel: #{}",
                                 guild_id.name(&ctx.cache).unwrap(),
                                 message.channel_id.name(&ctx.http).await.unwrap()
                             )))
-                            .timestamp(Timestamp::now()),
+                            .timestamp(serenity::Timestamp::now()),
                     ),
                 )
                 .await
             {
                 Ok(m) => {
-                    let _ = m.react(&ctx.http, ReactionType::Unicode("❌".into())).await;
+                    let _ = m
+                        .react(&ctx.http, serenity::ReactionType::Unicode("❌".into()))
+                        .await;
                 }
                 Err(_) => todo!(),
             }

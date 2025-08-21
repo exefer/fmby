@@ -1,6 +1,6 @@
 use crate::config;
+use poise::serenity_prelude::prelude::{TypeMap, TypeMapKey};
 use sea_orm::DatabaseConnection;
-use serenity::prelude::{TypeMap, TypeMapKey};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::RwLock;
 

@@ -6,20 +6,20 @@ use crate::{
 };
 use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use migration::OnConflict;
+use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*};
-use serenity::all::*;
 
 pub struct AddLinksHandler;
 
 impl AddLinksHandler {
-    fn is_message_in_add_links(message: &Message) -> bool {
+    fn is_message_in_add_links(message: &serenity::Message) -> bool {
         message.channel_id.get() == DevChannel::AddLinks.id()
     }
 }
 
-#[async_trait]
-impl EventHandler for AddLinksHandler {
-    async fn message(&self, ctx: Context, message: Message) {
+#[serenity::async_trait]
+impl serenity::EventHandler for AddLinksHandler {
+    async fn message(&self, ctx: serenity::Context, message: serenity::Message) {
         if !Self::is_message_in_add_links(&message) {
             return;
         };
@@ -35,7 +35,7 @@ impl EventHandler for AddLinksHandler {
 
         match wiki_entries {
             Ok(wiki_entries) if !wiki_entries.is_empty() => {
-                let mut embed = CreateEmbed::new();
+                let mut embed = serenity::CreateEmbed::new();
 
                 for status in WikiUrlStatus::iter() {
                     if let Some(formatted) = wiki_entries.format_for_embed(&status) {
@@ -54,10 +54,10 @@ impl EventHandler for AddLinksHandler {
                     }
                 }
 
-                let builder = CreateMessage::new()
+                let builder = serenity::CreateMessage::new()
                     .add_embed(embed)
-                    .reference_message(MessageReference::from(&message))
-                    .allowed_mentions(CreateAllowedMentions::new().replied_user(true));
+                    .reference_message(serenity::MessageReference::from(&message))
+                    .allowed_mentions(serenity::CreateAllowedMentions::new().replied_user(true));
 
                 message.channel_id.send_message(&ctx.http, builder).await;
             }
