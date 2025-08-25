@@ -5,9 +5,7 @@ use crate::{
 use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use fmby_core::{config::AddLinksMessages, structs::Data};
 use migration::OnConflict;
-use poise::serenity_prelude::{
-    Context, CreateAllowedMentions, CreateEmbed, CreateMessage, Message, MessageReference,
-};
+use poise::serenity_prelude::*;
 use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*};
 
 fn is_message_in_add_links(message: &Message) -> bool {
