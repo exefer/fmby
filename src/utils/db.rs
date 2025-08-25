@@ -1,15 +1,14 @@
 use entity::{prelude::*, wiki_urls};
-use sea_orm::Iterable;
-use sea_orm::prelude::*;
-use serenity::all::*;
+use poise::serenity_prelude as serenity;
+use sea_orm::{Iterable, prelude::*};
 
-#[async_trait]
+#[serenity::async_trait]
 pub trait WikiUrlFinder {
     /// Look up multiple wiki URL entries in a single database query.
     ///
     /// ## Arguments
     ///
-    /// * `conn` - Reference to an active [`DatabaseConnection`].
+    /// * `pool` - Reference to an active [`DatabaseConnection`].
     /// * `urls` - Slice of URLs to look up.
     ///
     /// ## Returns
@@ -37,7 +36,7 @@ pub trait WikiUrlFinder {
     ///     "example.org".to_string(),
     /// ];
     ///
-    /// let entries = urls.find_wiki_url_entries(&conn).await?;
+    /// let entries = urls.find_wiki_url_entries(&pool).await?;
     ///
     /// for entry in entries {
     ///     println!("Found: {} -> {:?}", entry.url, entry);
@@ -45,15 +44,15 @@ pub trait WikiUrlFinder {
     /// ```
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr>;
 }
 
-#[async_trait]
+#[serenity::async_trait]
 impl WikiUrlFinder for Vec<String> {
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr> {
         if self.is_empty() {
             return Ok(Vec::new());
@@ -61,18 +60,18 @@ impl WikiUrlFinder for Vec<String> {
 
         WikiUrls::find()
             .filter(wiki_urls::Column::Url.is_in(self.clone()))
-            .all(conn)
+            .all(pool)
             .await
     }
 }
 
-#[async_trait]
+#[serenity::async_trait]
 impl WikiUrlFinder for [String] {
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr> {
-        self.to_vec().find_wiki_url_entries(conn).await
+        self.to_vec().find_wiki_url_entries(pool).await
     }
 }
 

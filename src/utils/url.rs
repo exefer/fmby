@@ -85,7 +85,7 @@ pub async fn fetch_wiki_links() -> anyhow::Result<Vec<WikiLink>> {
 }
 
 pub async fn insert_wiki_urls(
-    conn: &DatabaseConnection,
+    pool: &DatabaseConnection,
     mut entries: Vec<WikiLink>,
 ) -> Result<(), DbErr> {
     let chunk_size = WikiUrls::chunk_size();
@@ -95,8 +95,7 @@ pub async fn insert_wiki_urls(
             .drain(..chunk_size.min(entries.len()))
             .map(WikiLink::into_active_model)
             .collect();
-
-        let tx = conn.begin().await?;
+        let tx = pool.begin().await?;
 
         WikiUrls::insert_many(chunk)
             .on_conflict(
