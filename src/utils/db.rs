@@ -8,7 +8,7 @@ pub trait WikiUrlFinder {
     ///
     /// ## Arguments
     ///
-    /// * `conn` - Reference to an active [`DatabaseConnection`].
+    /// * `pool` - Reference to an active [`DatabaseConnection`].
     /// * `urls` - Slice of URLs to look up.
     ///
     /// ## Returns
@@ -36,7 +36,7 @@ pub trait WikiUrlFinder {
     ///     "example.org".to_string(),
     /// ];
     ///
-    /// let entries = urls.find_wiki_url_entries(&conn).await?;
+    /// let entries = urls.find_wiki_url_entries(&pool).await?;
     ///
     /// for entry in entries {
     ///     println!("Found: {} -> {:?}", entry.url, entry);
@@ -44,7 +44,7 @@ pub trait WikiUrlFinder {
     /// ```
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr>;
 }
 
@@ -52,7 +52,7 @@ pub trait WikiUrlFinder {
 impl WikiUrlFinder for Vec<String> {
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr> {
         if self.is_empty() {
             return Ok(Vec::new());
@@ -60,7 +60,7 @@ impl WikiUrlFinder for Vec<String> {
 
         WikiUrls::find()
             .filter(wiki_urls::Column::Url.is_in(self.clone()))
-            .all(conn)
+            .all(pool)
             .await
     }
 }
@@ -69,9 +69,9 @@ impl WikiUrlFinder for Vec<String> {
 impl WikiUrlFinder for [String] {
     async fn find_wiki_url_entries(
         &self,
-        conn: &DatabaseConnection,
+        pool: &DatabaseConnection,
     ) -> Result<Vec<wiki_urls::Model>, DbErr> {
-        self.to_vec().find_wiki_url_entries(conn).await
+        self.to_vec().find_wiki_url_entries(pool).await
     }
 }
 

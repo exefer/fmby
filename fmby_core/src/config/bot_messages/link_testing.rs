@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{config::MessagesConfig, generate_message_getters};
+use crate::generate_message_getters;
 
 #[derive(Debug, Default)]
 pub struct LinkTestingMessages {

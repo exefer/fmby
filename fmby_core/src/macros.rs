@@ -8,16 +8,15 @@ macro_rules! generate_message_getters {
     ) => {
         impl $struct_ty {
             $(
-                pub async fn $fn_name(
-                    data: &std::sync::Arc<tokio::sync::RwLock<poise::serenity_prelude::prelude::TypeMap>>,
+                pub fn $fn_name(
+                    data: &std::sync::Arc<$crate::structs::Data>,
                     $(
                         $(
                             $placeholder: impl std::fmt::Display,
                         )*
                     )*
                 ) -> String {
-                    let lock = $crate::shared::get::<$crate::config::MessagesConfig>(data).await;
-                    let mut msg = lock.read().await$(.$field)+.to_string();
+                    let mut msg = data.config.bot_messages$(.$field)+.to_string();
                     $(
                         $(
                             msg = msg.replace(
