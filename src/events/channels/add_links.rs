@@ -89,7 +89,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                 message_id = %message.id.get(),
                 user_id = %message.author.id.get(),
                 urls = ?urls,
-                "Database error while handling AddLinksHandler::message"
+                "Database error while handling add_links::on_message"
             );
         }
     }
