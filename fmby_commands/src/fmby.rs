@@ -36,22 +36,20 @@ impl From<OnlineStatusChoice> for OnlineStatus {
 
 #[poise::command(slash_command, owners_only)]
 pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), Error> {
-    ctx.defer_ephemeral().await?;
-
     ctx.serenity_context().set_status(status.into());
-
     ctx.reply("Done!").await?;
+
     Ok(())
 }
 
 #[poise::command(slash_command, owners_only)]
 pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
-    ctx.defer_ephemeral().await?;
-
     ctx.serenity_context()
         .set_activity(Some(ActivityData::custom(state)));
-
     ctx.reply("Done!").await?;
+
+    Ok(())
+}
 
 #[poise::command(slash_command, owners_only)]
 pub async fn refresh_db(ctx: Context<'_>) -> Result<(), Error> {

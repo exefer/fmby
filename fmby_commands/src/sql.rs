@@ -3,8 +3,6 @@ use sea_orm::{ConnectionTrait, Statement};
 
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
-    ctx.defer().await?;
-
     match ctx.data().database.pool.execute_unprepared(&sql).await {
         Ok(res) => {
             ctx.reply(format!("Rows affected: {}", res.rows_affected()))
@@ -20,8 +18,6 @@ pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
 
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> Result<(), Error> {
-    ctx.defer().await?;
-
     match ctx
         .data()
         .database
