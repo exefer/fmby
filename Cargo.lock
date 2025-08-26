@@ -696,6 +696,7 @@ name = "fmby_commands"
 version = "0.1.0"
 dependencies = [
  "fmby_core",
+ "fmby_entities",
  "poise",
  "sea-orm",
 ]
