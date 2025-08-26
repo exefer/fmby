@@ -4,12 +4,14 @@ pub use fmby_core::{
 };
 pub mod fmby;
 pub mod meta;
+pub mod sql;
 
 #[must_use]
 pub fn commands() -> Vec<crate::Command> {
     let commands: Vec<crate::Command> = meta::commands()
         .into_iter()
         .chain(fmby::commands())
+        .chain(sql::commands())
         .collect();
 
     commands

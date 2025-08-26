@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 fmby_core = { path = "../fmby_core" }
 poise.workspace = true
+sea-orm.workspace = true
