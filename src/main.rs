@@ -1,6 +1,3 @@
-mod constants;
-mod events;
-mod utils;
 use poise::serenity_prelude::{self as serenity};
 use std::sync::Arc;
 
@@ -29,7 +26,7 @@ async fn main() {
 
     let client = serenity::Client::builder(token, intents)
         .framework(framework)
-        .event_handler(events::Handler)
+        .event_handler(fmby_events::Handler)
         .data(Arc::new(fmby_core::structs::Data {
             time_started: std::time::Instant::now(),
             has_started: std::sync::atomic::AtomicBool::new(false),

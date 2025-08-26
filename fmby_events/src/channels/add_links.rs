@@ -1,10 +1,11 @@
-use crate::{
+use fmby_core::{
+    config::AddLinksMessages,
     constants::DevChannel,
+    structs::Data,
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
 };
-use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use fmby_core::{config::AddLinksMessages, structs::Data};
-use migration::OnConflict;
+use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
+use fmby_migrations::OnConflict;
 use poise::serenity_prelude::*;
 use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*};
 

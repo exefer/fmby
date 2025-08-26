@@ -1,9 +1,9 @@
-use crate::{
+use fmby_core::{
+    config::LinkTestingMessages,
     constants::{DevChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
-use entity::prelude::*;
-use fmby_core::config::LinkTestingMessages;
+use fmby_entities::prelude::*;
 use poise::serenity_prelude::{small_fixed_array::FixedArray, *};
 use std::collections::HashSet;
 

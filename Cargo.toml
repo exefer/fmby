@@ -9,7 +9,13 @@ readme = "README.md"
 publish = false
 
 [workspace]
-members = ["migration", "entity", "fmby_core", "fmby_commands"]
+members = [
+    "fmby_migrations",
+    "fmby_entities",
+    "fmby_core",
+    "fmby_commands",
+    "fmby_events",
+]
 
 [dependencies]
 serde.workspace = true
@@ -17,16 +23,12 @@ tokio.workspace = true
 sea-orm.workspace = true
 anyhow.workspace = true
 poise.workspace = true
-migration = { path = "migration" }
-entity = { path = "entity" }
+fmby_migrations = { path = "fmby_migrations" }
+fmby_entities = { path = "fmby_entities" }
 fmby_core = { path = "fmby_core" }
 fmby_commands = { path = "fmby_commands" }
+fmby_events = { path = "fmby_events" }
 dotenvy = "0.15.7"
-tracing = "0.1.41"
-serde_json = "1.0.142"
-regex = "1.11.1"
-reqwest = "0.12.23"
-pulldown-cmark = "0.13.0"
 
 [workspace.dependencies]
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
@@ -37,6 +39,7 @@ sea-orm = { version = "1.1.0", default-features = false, features = [
 ] }
 serde = { version = "1.0.219", features = ["derive"] }
 anyhow = "1.0.99"
+reqwest = "0.12.23"
 
 [patch.'https://github.com/serenity-rs/serenity']
 serenity = { git = 'https://github.com/jamesbt365/serenity', branch = 'components-v2-withtag-gradient-nameplates/decor-resolved' }

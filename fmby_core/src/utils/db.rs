@@ -1,4 +1,4 @@
-use entity::{prelude::*, wiki_urls};
+use fmby_entities::{prelude::*, wiki_urls};
 use poise::serenity_prelude as serenity;
 use sea_orm::{Iterable, prelude::*};
 

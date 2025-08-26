@@ -1,4 +1,4 @@
-use entity::{sea_orm_active_enums::WikiUrlStatus, wiki_urls};
+use fmby_entities::{sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 
 pub trait UrlFormatter {
     fn format_for_embed(&self, status: &WikiUrlStatus) -> Option<String>;

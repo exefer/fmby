@@ -1,7 +1,7 @@
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 use crate::utils::db::ChunkSize;
-use entity::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use migration::OnConflict;
+use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
+use fmby_migrations::OnConflict;
 use pulldown_cmark::{Event, Tag, TagEnd};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*};
