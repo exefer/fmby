@@ -7,6 +7,5 @@ edition = "2024"
 sea-orm.workspace = true
 poise.workspace = true
 fmby_core = { path = "../fmby_core" }
-fmby_migrations = { path = "../fmby_migrations" }
 fmby_entities = { path = "../fmby_entities" }
 tracing = "0.1.41"

@@ -727,7 +727,6 @@ version = "0.1.0"
 dependencies = [
  "fmby_core",
  "fmby_entities",
- "fmby_migrations",
  "poise",
  "sea-orm",
  "tracing",

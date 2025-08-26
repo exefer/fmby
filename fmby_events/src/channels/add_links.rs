@@ -5,9 +5,8 @@ use fmby_core::{
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use fmby_migrations::OnConflict;
 use poise::serenity_prelude::*;
-use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*};
+use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*, sea_query::OnConflict};
 
 fn is_message_in_add_links(message: &Message) -> bool {
     message.channel_id.get() == DevChannel::AddLinks.id()
