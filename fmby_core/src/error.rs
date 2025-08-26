@@ -1,6 +1,5 @@
 #![allow(unused)]
 use poise::serenity_prelude::{self as serenity, Permissions};
-
 use std::fmt;
 
 impl fmt::Display for PermissionErrorType {
@@ -11,6 +10,7 @@ impl fmt::Display for PermissionErrorType {
         }
     }
 }
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -19,6 +19,7 @@ impl fmt::Display for Error {
         }
     }
 }
+
 impl<E> From<E> for Error
 where
     E: std::error::Error + Send + Sync + 'static,
@@ -27,11 +28,13 @@ where
         Error::Custom(Box::new(e))
     }
 }
+
 #[derive(Debug)]
 pub enum PermissionErrorType {
     User(Permissions),
     Bot(Permissions),
 }
+
 #[derive(Debug)]
 pub enum Error {
     Permissions(PermissionErrorType),
