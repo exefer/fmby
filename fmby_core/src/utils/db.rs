@@ -59,7 +59,7 @@ impl WikiUrlFinder for Vec<String> {
         }
 
         WikiUrls::find()
-            .filter(wiki_urls::Column::Url.is_in(self.clone()))
+            .filter(wiki_urls::Column::Url.is_in(self))
             .all(pool)
             .await
     }
