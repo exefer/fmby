@@ -10,6 +10,7 @@ use crate::{Context, Error};
 )]
 pub async fn source(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("<https://github.com/exefer/fmby>").await?;
+
     Ok(())
 }
 
@@ -19,6 +20,7 @@ pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("**Bailing out, you are on your own. Good luck.**")
         .await?;
     ctx.framework().serenity_context.shutdown_all();
+
     Ok(())
 }
 

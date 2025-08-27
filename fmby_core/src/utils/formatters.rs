@@ -27,6 +27,7 @@ impl UrlFormatter for [String] {
 impl UrlFormatter for Vec<wiki_urls::Model> {
     fn format_for_embed(&self, status: &WikiUrlStatus) -> Option<String> {
         let filtered: Vec<_> = self.iter().filter(|e| e.status == *status).collect();
+
         if filtered.is_empty() {
             return None;
         }
