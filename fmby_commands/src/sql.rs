@@ -29,8 +29,7 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> R
         .await
     {
         Ok(exec) => {
-            use sea_orm::sqlx::postgres::PgRow;
-            let rows: Vec<&PgRow> = exec.iter().filter_map(|res| res.try_as_pg_row()).collect();
+            let rows: Vec<_> = exec.iter().filter_map(|res| res.try_as_pg_row()).collect();
 
             let formatted = if pretty.unwrap_or(false) {
                 format!("{:#?}", rows)
