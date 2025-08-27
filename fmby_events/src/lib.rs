@@ -31,6 +31,7 @@ pub async fn event_handler(ctx: &serenity::Context, event: &FullEvent) -> Result
         }
         FullEvent::Message { new_message, .. } => {
             channels::add_links::on_message(ctx, new_message).await;
+            channels::global::on_message(ctx, new_message).await;
         }
         FullEvent::ReactionAdd { add_reaction, .. } => {
             bookmark::on_reaction_add(ctx, add_reaction).await;
