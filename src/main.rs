@@ -1,4 +1,8 @@
 use fmby_core::rss::RssConfig;
+use poise::{
+    Prefix,
+    serenity_prelude::{self as serenity},
+};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -9,6 +13,7 @@ async fn main() {
         commands: fmby_commands::commands(),
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some("||".into()),
+            additional_prefixes: vec![Prefix::Literal("$")],
             mention_as_prefix: true,
             execute_untracked_edits: false,
             case_insensitive_commands: true,
