@@ -4,6 +4,7 @@ pub use fmby_core::{
 };
 pub mod fmby;
 pub mod meta;
+pub mod rss;
 pub mod sql;
 
 #[must_use]
@@ -12,6 +13,7 @@ pub fn commands() -> Vec<crate::Command> {
         .into_iter()
         .chain(fmby::commands())
         .chain(sql::commands())
+        .chain(rss::commands())
         .collect();
 
     commands

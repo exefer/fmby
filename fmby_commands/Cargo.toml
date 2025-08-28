@@ -8,3 +8,4 @@ fmby_core = { path = "../fmby_core" }
 fmby_entities = { path = "../fmby_entities" }
 poise.workspace = true
 sea-orm.workspace = true
+url.workspace = true
