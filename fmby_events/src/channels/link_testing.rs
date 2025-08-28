@@ -1,5 +1,4 @@
 use fmby_core::{
-    config::LinkTestingMessages,
     constants::{DevChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
@@ -17,21 +16,18 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
 
     if let Some(message_id) = thread.base.last_message_id
         && let Ok(message) = thread.id.widen().message(&ctx.http, message_id).await
-        && let Some(urls) = extract_urls(&message.content)
+        && let Some(_urls) = extract_urls(&message.content)
     {
         // TODO: Maybe update the database records with the first message ID and the thread ID
     }
 
     if *newly_created == Some(true) {
-        let _ = thread
-            .send_message(
-                &ctx.http,
-                CreateMessage::new().content(LinkTestingMessages::get_thread_create_welcome(
-                    &ctx.data(),
-                    thread.owner_id.mention(),
-                )),
-            )
-            .await;
+        let builder = CreateMessage::new().content(format!(
+            "Thread opened by {} - join in, share your thoughts, and keep the discussion going!",
+            thread.owner_id.mention()
+        ));
+
+        let _ = thread.send_message(&ctx.http, builder).await;
     }
 }
 
@@ -55,15 +51,17 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
     ] {
         for tag in tags {
             let text = match tag.get() {
-                x if x == ForumTag::Rejected.id() && closing => Some(
-                    LinkTestingMessages::get_thread_update_rejected(&ctx.data(), owner),
-                ),
-                x if x == ForumTag::Added.id() && closing => Some(
-                    LinkTestingMessages::get_thread_update_approved(&ctx.data(), owner),
-                ),
-                x if x == ForumTag::Rejected.id() && !closing => Some(
-                    LinkTestingMessages::get_thread_update_reopened(&ctx.data(), owner),
-                ),
+                x if x == ForumTag::Rejected.id() && closing => {
+                    Some(format!("{}: thread closed as rejected", owner))
+                }
+                x if x == ForumTag::Added.id() && closing => Some(format!(
+                    "{}: thread closed as approved; link(s) will be added to the wiki.",
+                    owner
+                )),
+                x if x == ForumTag::Rejected.id() && !closing => Some(format!(
+                    "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the link(s) you were testing.",
+                    owner
+                )),
                 _ => None,
             };
             if let Some(text) = text

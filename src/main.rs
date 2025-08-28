@@ -31,7 +31,6 @@ async fn main() {
             time_started: std::time::Instant::now(),
             has_started: std::sync::atomic::AtomicBool::new(false),
             database: fmby_core::database::FmbyDatabase::init().await,
-            config: fmby_core::structs::Config::default(),
         }))
         .await;
 

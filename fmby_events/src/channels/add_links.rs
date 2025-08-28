@@ -1,5 +1,4 @@
 use fmby_core::{
-    config::AddLinksMessages,
     constants::FmhyChannel,
     structs::Data,
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
@@ -32,15 +31,9 @@ pub async fn on_message(ctx: &Context, message: &Message) {
             for status in WikiUrlStatus::iter() {
                 if let Some(formatted) = wiki_entries.format_for_embed(&status) {
                     let title = match status {
-                        WikiUrlStatus::Added => {
-                            AddLinksMessages::get_message_already_added(&ctx.data())
-                        }
-                        WikiUrlStatus::Pending => {
-                            AddLinksMessages::get_message_already_pending(&ctx.data())
-                        }
-                        WikiUrlStatus::Removed => {
-                            AddLinksMessages::get_message_previously_removed(&ctx.data())
-                        }
+                        WikiUrlStatus::Added => "Link(s) already in the wiki:",
+                        WikiUrlStatus::Pending => "Links(s) already in queue:",
+                        WikiUrlStatus::Removed => "Links(s) previously removed from the wiki:",
                     };
                     embed = embed.field(title, formatted, false);
                 }
@@ -51,7 +44,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                 .reference_message(MessageReference::from(message))
                 .allowed_mentions(CreateAllowedMentions::new().replied_user(true));
 
-            message.channel_id.send_message(&ctx.http, builder).await;
+            let _ = message.channel_id.send_message(&ctx.http, builder).await;
         }
         Ok(_) => {
             match WikiUrls::insert_many(
@@ -76,14 +69,14 @@ pub async fn on_message(ctx: &Context, message: &Message) {
             .exec(&ctx.data::<Data>().database.pool)
             .await
             {
-                Ok(TryInsertResult::Inserted(insert_result)) => {}
+                Ok(TryInsertResult::Inserted(_result)) => {}
                 Err(_) => {}
                 _ => {}
             };
         }
-        Err(err) => {
+        Err(e) => {
             tracing::error!(
-                error = %err,
+                error = %e,
                 guild_id = ?message.guild_id.map(|g| g.get()),
                 channel_id = %message.channel_id.get(),
                 message_id = %message.id.get(),
