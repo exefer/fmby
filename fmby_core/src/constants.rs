@@ -1,4 +1,3 @@
-#![allow(unused)]
 use crate::id_str_enum;
 
 pub const FMHY_SINGLE_PAGE_ENDPOINT: &str = "https://api.fmhy.net/single-page";

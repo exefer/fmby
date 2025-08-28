@@ -1,4 +1,3 @@
-#![allow(unused)]
 use poise::serenity_prelude::{self as serenity, Permissions};
 use std::fmt;
 
