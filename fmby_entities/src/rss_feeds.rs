@@ -17,7 +17,7 @@ pub struct Model {
     pub guild_id: i64,
     pub created_by: i64,
     pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub last_checked_at: DateTimeWithTimeZone,
     pub check_interval_minutes: i32,
     pub status: RssFeedStatus,
 }

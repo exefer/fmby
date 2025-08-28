@@ -10,6 +10,8 @@ pub struct Model {
     pub id: Uuid,
     pub feed_id: Uuid,
     #[sea_orm(column_type = "Text")]
+    pub entry_id: String,
+    #[sea_orm(column_type = "Text")]
     pub title: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub link: Option<String>,
@@ -18,7 +20,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub image_url: Option<String>,
     pub published_at: Option<DateTimeWithTimeZone>,
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     pub message_id: Option<i64>,
 }
 

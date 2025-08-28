@@ -6,11 +6,12 @@ use sea_orm_migration::{
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
-const WIKI_URLS_URL_IDX: &str = "wiki_urls_url_idx";
-const WIKI_URLS_NAME_IDX: &str = "wiki_urls_name_idx";
-const RSS_FEEDS_URL_CHANNEL_IDX: &str = "rss_feeds_url_channel_idx";
-const RSS_FEEDS_ACTIVE_UPDATED_AT_IDX: &str = "rss_feeds_active_updated_at_idx";
-const RSS_FEED_ENTRIES_FEED_ID_FK: &str = "fk_rss_feed_entries_feed_id";
+const UQ_WIKI_URLS_URL: &str = "uq_wiki_urls_url";
+const IDX_WIKI_URLS_NAME: &str = "idx_wiki_urls_name";
+const UQ_RSS_FEEDS_URL_CHANNEL_ID: &str = "uq_rss_feeds_url_channel_id";
+const IDX_RSS_FEEDS_ACTIVE_LAST_CHECKED_AT: &str = "idx_rss_feeds_active_last_checked_at";
+const FK_RSS_FEED_ENTRIES_FEED_ID: &str = "fk_rss_feed_entries_feed_id";
+const UQ_RSS_FEED_ENTRIES_FEED_ENTRY_ID: &str = "uq_rss_feed_entries_feed_entry_id";
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
@@ -70,7 +71,7 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(
-                        timestamp_with_time_zone(RssFeeds::UpdatedAt)
+                        timestamp_with_time_zone(RssFeeds::LastCheckedAt)
                             .default(Expr::current_timestamp()),
                     )
                     .col(integer(RssFeeds::CheckIntervalMinutes).default(5))
@@ -86,12 +87,16 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_uuid(RssFeedEntries::Id))
                     .col(uuid(RssFeedEntries::FeedId))
+                    .col(text(RssFeedEntries::EntryId))
                     .col(text(RssFeedEntries::Title))
                     .col(text_null(RssFeedEntries::Link))
                     .col(text_null(RssFeedEntries::Description))
                     .col(text_null(RssFeedEntries::ImageUrl))
                     .col(timestamp_with_time_zone_null(RssFeedEntries::PublishedAt))
-                    .col(timestamp(RssFeedEntries::CreatedAt).default(Expr::current_timestamp()))
+                    .col(
+                        timestamp_with_time_zone(RssFeedEntries::CreatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
                     .col(big_integer_null(RssFeedEntries::MessageId))
                     .to_owned(),
             )
@@ -100,7 +105,7 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name(WIKI_URLS_URL_IDX)
+                    .name(UQ_WIKI_URLS_URL)
                     .table(WikiUrls::Table)
                     .col(WikiUrls::Url)
                     .unique()
@@ -111,7 +116,7 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name(WIKI_URLS_NAME_IDX)
+                    .name(IDX_WIKI_URLS_NAME)
                     .table(WikiUrls::Table)
                     .col(WikiUrls::Name)
                     .to_owned(),
@@ -121,7 +126,7 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name(RSS_FEEDS_URL_CHANNEL_IDX)
+                    .name(UQ_RSS_FEEDS_URL_CHANNEL_ID)
                     .table(RssFeeds::Table)
                     .col(RssFeeds::Url)
                     .col(RssFeeds::ChannelId)
@@ -133,11 +138,23 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name(RSS_FEEDS_ACTIVE_UPDATED_AT_IDX)
+                    .name(IDX_RSS_FEEDS_ACTIVE_LAST_CHECKED_AT)
                     .table(RssFeeds::Table)
                     .col(RssFeeds::Status)
-                    .col(RssFeeds::UpdatedAt)
+                    .col(RssFeeds::LastCheckedAt)
                     .and_where(Expr::col(RssFeeds::Status).eq(RssFeedStatus::Active.to_string()))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name(UQ_RSS_FEED_ENTRIES_FEED_ENTRY_ID)
+                    .table(RssFeedEntries::Table)
+                    .col(RssFeedEntries::FeedId)
+                    .col(RssFeedEntries::EntryId)
+                    .unique()
                     .to_owned(),
             )
             .await?;
@@ -145,7 +162,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name(RSS_FEED_ENTRIES_FEED_ID_FK)
+                    .name(FK_RSS_FEED_ENTRIES_FEED_ID)
                     .from(RssFeedEntries::Table, RssFeedEntries::FeedId)
                     .to(RssFeeds::Table, RssFeeds::Id)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -161,27 +178,35 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .table(RssFeedEntries::Table)
-                    .name(RSS_FEED_ENTRIES_FEED_ID_FK)
+                    .name(FK_RSS_FEED_ENTRIES_FEED_ID)
                     .to_owned(),
             )
             .await?;
 
         manager
-            .drop_index(Index::drop().name(WIKI_URLS_URL_IDX).to_owned())
+            .drop_index(Index::drop().name(UQ_WIKI_URLS_URL).to_owned())
             .await?;
 
         manager
-            .drop_index(Index::drop().name(WIKI_URLS_NAME_IDX).to_owned())
+            .drop_index(Index::drop().name(IDX_WIKI_URLS_NAME).to_owned())
             .await?;
 
         manager
-            .drop_index(Index::drop().name(RSS_FEEDS_URL_CHANNEL_IDX).to_owned())
+            .drop_index(Index::drop().name(UQ_RSS_FEEDS_URL_CHANNEL_ID).to_owned())
             .await?;
 
         manager
             .drop_index(
                 Index::drop()
-                    .name(RSS_FEEDS_ACTIVE_UPDATED_AT_IDX)
+                    .name(IDX_RSS_FEEDS_ACTIVE_LAST_CHECKED_AT)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .drop_index(
+                Index::drop()
+                    .name(UQ_RSS_FEED_ENTRIES_FEED_ENTRY_ID)
                     .to_owned(),
             )
             .await?;
@@ -245,7 +270,7 @@ pub enum RssFeeds {
     GuildId,
     CreatedBy,
     CreatedAt,
-    UpdatedAt,
+    LastCheckedAt,
     CheckIntervalMinutes,
     Status,
 }
@@ -255,6 +280,7 @@ pub enum RssFeedEntries {
     Table,
     Id,
     FeedId,
+    EntryId,
     Title,
     Link,
     Description,
