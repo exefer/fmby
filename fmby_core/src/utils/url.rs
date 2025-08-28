@@ -97,7 +97,7 @@ pub async fn insert_wiki_urls(
             .drain(..chunk_size.min(entries.len()))
             .map(WikiLink::into_active_model)
             .collect();
-        let tx = pool.begin().await?;
+        let txn = pool.begin().await?;
 
         WikiUrls::insert_many(chunk)
             .on_conflict(
@@ -106,10 +106,10 @@ pub async fn insert_wiki_urls(
                     .to_owned(),
             )
             .do_nothing()
-            .exec(&tx)
+            .exec(&txn)
             .await?;
 
-        tx.commit().await?;
+        txn.commit().await?;
     }
 
     Ok(())
