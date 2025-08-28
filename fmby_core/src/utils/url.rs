@@ -4,6 +4,7 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use pulldown_cmark::{Event, Tag, TagEnd};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
+use std::sync::LazyLock;
 
 #[derive(Debug, Clone)]
 pub struct WikiLink {
@@ -30,10 +31,12 @@ pub fn clean_url(url: &str) -> &str {
         .trim_end_matches('/')
 }
 
-pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
-    let regex = Regex::new(r"(https?):\/\/(?:ww(?:w|\d+)\.)?((?:[\w_-]+(?:\.[\w_-]+)+)[\w.,@?^=%&:\/~+#-]*[\w@?^=%&~+-])").unwrap();
+static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(https?):\/\/(?:ww(?:w|\d+)\.)?((?:[\w_-]+(?:\.[\w_-]+)+)[\w.,@?^=%&:\/~+#-]*[\w@?^=%&~+-])").unwrap()
+});
 
-    let matches: Vec<String> = regex
+pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
+    let matches: Vec<String> = URL_REGEX
         .find_iter(haystack)
         .map(|m| clean_url(m.as_str()).to_string())
         .collect();
