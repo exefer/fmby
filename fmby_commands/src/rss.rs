@@ -8,17 +8,6 @@ use sea_orm::{
 };
 use url::Url;
 
-#[poise::command(
-    slash_command,
-    install_context = "Guild",
-    interaction_context = "Guild",
-    subcommands("add", "remove"),
-    subcommand_required
-)]
-pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
-    Ok(())
-}
-
 async fn autocomplete_name<'a>(
     ctx: Context<'a>,
     partial: &'a str,
@@ -38,6 +27,17 @@ async fn autocomplete_name<'a>(
         .collect();
 
     serenity::CreateAutocompleteResponse::new().set_choices(choices)
+}
+
+#[poise::command(
+    slash_command,
+    install_context = "Guild",
+    interaction_context = "Guild",
+    subcommands("add", "remove"),
+    subcommand_required
+)]
+pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
+    Ok(())
 }
 
 #[poise::command(slash_command, owners_only)]
@@ -122,5 +122,5 @@ pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error
 
 #[must_use]
 pub fn commands() -> [crate::Command; 2] {
-    [fetch_feed_title(), rss()]
+    [rss(), fetch_feed_title()]
 }
