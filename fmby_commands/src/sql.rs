@@ -4,12 +4,12 @@ use sea_orm::{ConnectionTrait, Statement};
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
     match ctx.data().database.pool.execute_unprepared(&sql).await {
-        Ok(res) => {
-            ctx.reply(format!("Rows affected: {}", res.rows_affected()))
+        Ok(result) => {
+            ctx.reply(format!("Rows affected: {}", result.rows_affected()))
                 .await?;
         }
-        Err(err) => {
-            ctx.reply(format!("{}", err)).await?;
+        Err(e) => {
+            ctx.reply(format!("{}", e)).await?;
         }
     };
 
@@ -28,8 +28,8 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> R
         ))
         .await
     {
-        Ok(exec) => {
-            let rows: Vec<_> = exec.iter().filter_map(|res| res.try_as_pg_row()).collect();
+        Ok(result) => {
+            let rows: Vec<_> = result.iter().filter_map(|q| q.try_as_pg_row()).collect();
 
             let formatted = if pretty.unwrap_or(false) {
                 format!("{:#?}", rows)
@@ -39,14 +39,15 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> R
 
             ctx.reply(formatted).await?;
         }
-        Err(err) => {
-            ctx.reply(format!("{}", err)).await?;
+        Err(e) => {
+            ctx.reply(format!("{}", e)).await?;
         }
     }
 
     Ok(())
 }
 
+#[must_use]
 pub fn commands() -> [crate::Command; 2] {
     [sql_exec(), sql_query()]
 }

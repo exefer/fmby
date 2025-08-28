@@ -1,6 +1,8 @@
 use crate::{Context, Error};
+use fmby_core::utils::url::{fetch_wiki_links, insert_wiki_urls};
+use fmby_entities::prelude::*;
 use poise::serenity_prelude::{ActivityData, OnlineStatus};
-use sea_orm::{EntityTrait, PaginatorTrait};
+use sea_orm::prelude::*;
 
 #[poise::command(
     slash_command,
@@ -53,15 +55,12 @@ pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
 
 #[poise::command(slash_command, owners_only)]
 pub async fn refresh_db(ctx: Context<'_>) -> Result<(), Error> {
-    use fmby_core::utils::url::{fetch_wiki_links, insert_wiki_urls};
-    use fmby_entities::prelude::*;
-
     if let Ok(wiki_links) = fetch_wiki_links().await {
         let pool = &ctx.data().database.pool;
         let before = WikiUrls::find().count(pool).await.unwrap_or(0);
 
-        if let Err(err) = insert_wiki_urls(pool, wiki_links).await {
-            ctx.reply(format!("{}", err)).await?;
+        if let Err(e) = insert_wiki_urls(pool, wiki_links).await {
+            ctx.reply(format!("{}", e)).await?;
         } else {
             let after = WikiUrls::find().count(pool).await.unwrap_or(0);
             ctx.reply(format!("Rows inserted: {}", after.saturating_sub(before)))
