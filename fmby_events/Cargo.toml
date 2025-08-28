@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sea-orm.workspace = true
-poise.workspace = true
 fmby_core = { path = "../fmby_core" }
 fmby_entities = { path = "../fmby_entities" }
-tracing = "0.1.41"
+sea-orm.workspace = true
+poise.workspace = true
+tracing.workspace = true

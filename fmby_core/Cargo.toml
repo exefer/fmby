@@ -4,10 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+fmby_entities = { path = "../fmby_entities" }
 poise.workspace = true
 anyhow.workspace = true
 sea-orm.workspace = true
 reqwest.workspace = true
-fmby_entities = { path = "../fmby_entities" }
+tokio.workspace = true
+serde.workspace = true
+tracing.workspace = true
 pulldown-cmark = "0.13.0"
 regex = "1.11.2"
+feed-rs = "2.3.1"
