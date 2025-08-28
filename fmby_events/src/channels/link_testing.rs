@@ -3,7 +3,6 @@ use fmby_core::{
     constants::{DevChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
-use fmby_entities::prelude::*;
 use poise::serenity_prelude::{small_fixed_array::FixedArray, *};
 use std::collections::HashSet;
 

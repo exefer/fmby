@@ -1,6 +1,6 @@
 use fmby_core::{
     config::AddLinksMessages,
-    constants::DevChannel,
+    constants::FmhyChannel,
     structs::Data,
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
 };
@@ -8,14 +8,14 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::*;
 use sea_orm::{ActiveValue::*, Iterable, TryInsertResult, prelude::*, sea_query::OnConflict};
 
-fn is_message_in_add_links(message: &Message) -> bool {
-    message.channel_id.get() == DevChannel::AddLinks.id()
+fn is_add_links_channel(id: u64) -> bool {
+    id == FmhyChannel::AddLinks.id() || id == FmhyChannel::NsfwAddLinks.id()
 }
 
 pub async fn on_message(ctx: &Context, message: &Message) {
-    if !is_message_in_add_links(message) {
+    if !is_add_links_channel(message.channel_id.get()) {
         return;
-    };
+    }
 
     let Some(ref urls) = extract_urls(&message.content) else {
         return;
