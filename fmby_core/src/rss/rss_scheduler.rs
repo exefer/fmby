@@ -88,7 +88,7 @@ impl RssScheduler {
         let data = ctx.data_ref::<Data>();
         let max_entries = data.rss_config.settings.max_entries_per_check;
 
-        let entries_to_post = if data.rss_config.settings.debug_force_post {
+        let entries_to_post: Vec<_> = if data.rss_config.settings.debug_force_post {
             tracing::info!(
                 "DEBUG MODE: Force-posting {} entries from '{}' (may include previously processed items)",
                 entries.len().min(max_entries),
@@ -97,8 +97,11 @@ impl RssScheduler {
             entries
                 .into_iter()
                 .filter_map(|e| e.try_into_model().ok())
-                .take(max_entries)
                 .collect::<Vec<_>>()
+                .into_iter()
+                .take(max_entries)
+                .rev()
+                .collect()
         } else {
             let new_entries = rss_manager.insert_feed_entries(entries).await?;
             if new_entries.is_empty() {
@@ -113,7 +116,7 @@ impl RssScheduler {
                 new_entries.len(),
                 feed.name
             );
-            new_entries.into_iter().take(max_entries).collect()
+            new_entries.into_iter().take(max_entries).rev().collect()
         };
 
         for entry in entries_to_post {
