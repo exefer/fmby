@@ -36,6 +36,7 @@ impl From<OnlineStatusChoice> for OnlineStatus {
     }
 }
 
+/// Sets the bot's online status
 #[poise::command(slash_command, owners_only)]
 pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), Error> {
     ctx.serenity_context().set_status(status.into());
@@ -44,6 +45,7 @@ pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), 
     Ok(())
 }
 
+/// Sets the bot's activity to a custom message
 #[poise::command(slash_command, owners_only)]
 pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
     ctx.serenity_context()
@@ -53,6 +55,7 @@ pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
     Ok(())
 }
 
+/// Fetches wiki links and inserts them into the database, reporting the number of new rows
 #[poise::command(slash_command, owners_only)]
 pub async fn refresh_db(ctx: Context<'_>) -> Result<(), Error> {
     if let Ok(wiki_links) = fetch_wiki_links().await {

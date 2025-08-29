@@ -40,8 +40,13 @@ pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Add an RSS feed to the bot
 #[poise::command(slash_command)]
-pub async fn add(ctx: Context<'_>, name: String, url: String) -> Result<(), Error> {
+pub async fn add(
+    ctx: Context<'_>,
+    #[description = "Name of the RSS feed to add"] name: String,
+    #[description = "URL of the RSS feed to add"] url: String,
+) -> Result<(), Error> {
     match Url::parse(&url) {
         Ok(url) => {
             let rss_manager = RssManager::new(ctx.data().database.pool.clone().into());
@@ -73,10 +78,13 @@ pub async fn add(ctx: Context<'_>, name: String, url: String) -> Result<(), Erro
     Ok(())
 }
 
+/// Remove an RSS feed from the bot (use autocompletion to select the feed)
 #[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,
-    #[autocomplete = "autocomplete_name"] name: String,
+    #[description = "Name of the RSS feed to remove"]
+    #[autocomplete = "autocomplete_name"]
+    name: String,
 ) -> Result<(), Error> {
     match name.parse::<u128>() {
         Ok(uuid) => {

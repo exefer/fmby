@@ -1,6 +1,7 @@
 use crate::{Context, Error};
 use sea_orm::{ConnectionTrait, Statement};
 
+/// Executes a raw SQL command and replies with the number of affected rows or an error
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
     match ctx.data().database.pool.execute_unprepared(&sql).await {
@@ -16,6 +17,7 @@ pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
     Ok(())
 }
 
+/// Executes a SQL query, optionally pretty-prints results, and replies or returns an error
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> Result<(), Error> {
     match ctx
