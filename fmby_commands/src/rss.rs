@@ -28,6 +28,9 @@ async fn autocomplete_name<'a>(
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
             query.filter(Expr::col(rss_feeds::Column::Name).ilike(format!("%{}%", partial)))
         })
+        .apply_if(ctx.guild_id().map(|g| g.get()), |query, guild_id| {
+            query.filter(rss_feeds::Column::GuildId.eq(guild_id))
+        })
         .limit(25)
         .all(&ctx.data().database.pool)
         .await
