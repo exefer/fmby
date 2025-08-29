@@ -40,8 +40,8 @@ pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(slash_command, owners_only)]
-pub async fn add(ctx: Context<'_>, url: String, name: String) -> Result<(), Error> {
+#[poise::command(slash_command)]
+pub async fn add(ctx: Context<'_>, name: String, url: String) -> Result<(), Error> {
     match Url::parse(&url) {
         Ok(url) => {
             let rss_manager = RssManager::new(ctx.data().database.pool.clone().into());
@@ -73,7 +73,7 @@ pub async fn add(ctx: Context<'_>, url: String, name: String) -> Result<(), Erro
     Ok(())
 }
 
-#[poise::command(slash_command, owners_only)]
+#[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,
     #[autocomplete = "autocomplete_name"] name: String,
@@ -103,7 +103,7 @@ pub async fn remove(
     Ok(())
 }
 
-#[poise::command(prefix_command, owners_only)]
+#[poise::command(prefix_command)]
 pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error> {
     let fetcher = fmby_core::rss::RssFetcher::new(&fmby_core::rss::RssConfig::default());
     let message = ctx.reply("Fetching RSS feed...").await?;
