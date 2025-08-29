@@ -87,7 +87,9 @@ impl RssFetcher {
                 .unwrap_or_else(|| {
                     let timestamp = entry
                         .published
-                        .map_or_else(|| Utc::now().to_rfc3339(), |d| d.to_rfc3339());
+                        .or(entry.updated)
+                        .unwrap_or_else(Utc::now)
+                        .to_rfc3339();
                     let title = entry
                         .title
                         .as_ref()
@@ -136,7 +138,7 @@ impl RssFetcher {
             link: Set(link),
             description: Set(description),
             image_url: Set(image_url),
-            published_at: Set(entry.published.map(Into::into)),
+            published_at: Set(entry.published.or(entry.updated).map(Into::into)),
             ..Default::default()
         }
     }
