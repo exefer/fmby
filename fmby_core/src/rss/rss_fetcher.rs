@@ -60,7 +60,7 @@ impl RssFetcher {
             .collect();
 
         entries.sort_by(
-            |a, b| match (a.published_at.try_as_ref(), b.published_at.try_as_ref()) {
+            |a, b| match (a.published_at.as_ref(), b.published_at.as_ref()) {
                 (Some(a_date), Some(b_date)) => b_date.cmp(a_date),
                 (Some(_), None) => std::cmp::Ordering::Less,
                 (None, Some(_)) => std::cmp::Ordering::Greater,
