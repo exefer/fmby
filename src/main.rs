@@ -1,4 +1,3 @@
-use fmby_core::rss::RssConfig;
 use poise::{
     Prefix,
     serenity_prelude::{self as serenity},
@@ -37,7 +36,7 @@ async fn main() {
             time_started: std::time::Instant::now(),
             has_started: std::sync::atomic::AtomicBool::new(false),
             database: fmby_core::database::FmbyDatabase::init().await,
-            rss_config: RssConfig::default(),
+            rss_config: fmby_core::rss::RssConfig::default(),
         }))
         .await;
 

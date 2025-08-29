@@ -26,7 +26,9 @@ pub async fn on_message(ctx: &Context, message: &Message) {
 
     match wiki_entries {
         Ok(wiki_entries) if !wiki_entries.is_empty() => {
-            let mut embed = CreateEmbed::new();
+            let mut embed = CreateEmbed::new()
+                .title(":warning: Warning")
+                .color(Color::ORANGE);
 
             for status in WikiUrlStatus::iter() {
                 if let Some(formatted) = wiki_entries.format_for_embed(&status) {
