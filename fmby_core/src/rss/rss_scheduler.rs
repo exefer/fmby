@@ -190,7 +190,7 @@ impl BackgroundTask for RssScheduler {
     }
 
     fn interval(&mut self) -> Duration {
-        Duration::from_secs(5)
+        Duration::from_secs(60)
     }
 
     async fn run(&mut self) {
