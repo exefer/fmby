@@ -1,4 +1,5 @@
 use crate::{Context, Error};
+use poise::{CreateReply, serenity_prelude::MessageFlags};
 use sea_orm::{ConnectionTrait, Statement};
 
 /// Executes a raw SQL command and replies with the number of affected rows or an error
@@ -39,7 +40,13 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> R
                 format!("{:?}", rows)
             };
 
-            ctx.reply(formatted).await?;
+            ctx.send(
+                CreateReply::new()
+                    .content(formatted)
+                    .reply(true)
+                    .flags(MessageFlags::SUPPRESS_EMBEDS),
+            )
+            .await?;
         }
         Err(e) => {
             ctx.reply(format!("{}", e)).await?;
