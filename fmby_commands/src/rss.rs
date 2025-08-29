@@ -8,6 +8,18 @@ use sea_orm::{
 };
 use url::Url;
 
+async fn parse_uuid_or_reply(ctx: &Context<'_>, input: &str) -> Option<Uuid> {
+    match input.parse::<u128>() {
+        Ok(u) => Some(Uuid::from_u128(u)),
+        Err(_) => {
+            let _ = ctx
+                .reply("Invalid input. Please choose from the autocompletion choices.")
+                .await;
+            None
+        }
+    }
+}
+
 async fn autocomplete_name<'a>(
     ctx: Context<'a>,
     partial: &'a str,
@@ -33,7 +45,7 @@ async fn autocomplete_name<'a>(
     slash_command,
     install_context = "Guild",
     interaction_context = "Guild",
-    subcommands("add", "remove"),
+    subcommands("add", "remove", "rename"),
     subcommand_required
 )]
 pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
@@ -86,26 +98,48 @@ pub async fn remove(
     #[autocomplete = "autocomplete_name"]
     name: String,
 ) -> Result<(), Error> {
-    match name.parse::<u128>() {
-        Ok(uuid) => {
-            let uuid = Uuid::from_u128(uuid);
-            let feed = RssFeeds::delete_by_id(uuid)
-                .exec_with_returning(&ctx.data().database.pool)
-                .await?
-                .into_iter()
-                .next()
-                .unwrap();
+    if let Some(uuid) = parse_uuid_or_reply(&ctx, &name).await {
+        let feed = RssFeeds::delete_by_id(uuid)
+            .exec_with_returning(&ctx.data().database.pool)
+            .await?
+            .into_iter()
+            .next()
+            .unwrap();
 
-            ctx.reply(format!(
-                "Successfully removed \"{}\" RSS Feed with URL <{}>!",
-                feed.name, feed.url
-            ))
-            .await?;
-        }
-        Err(_) => {
-            ctx.reply("Invalid input. Please choose from the autocompletion choices.")
-                .await?;
-        }
+        ctx.reply(format!(
+            "Successfully removed \"{}\" RSS Feed with URL <{}>!",
+            feed.name, feed.url
+        ))
+        .await?;
+    }
+
+    Ok(())
+}
+
+/// Rename an RSS feed from the bot (use autocompletion to select the feed)
+#[poise::command(slash_command)]
+pub async fn rename(
+    ctx: Context<'_>,
+    #[description = "Name of the RSS feed to rename"]
+    #[autocomplete = "autocomplete_name"]
+    name: String,
+    #[description = "The new name for the RSS feed"] new_name: String,
+) -> Result<(), Error> {
+    if let Some(uuid) = parse_uuid_or_reply(&ctx, &name).await {
+        let feed = RssFeeds::update_many()
+            .col_expr(rss_feeds::Column::Name, Expr::value(new_name))
+            .filter(rss_feeds::Column::Id.eq(uuid))
+            .exec_with_returning(&ctx.data().database.pool)
+            .await?
+            .into_iter()
+            .next()
+            .unwrap();
+
+        ctx.reply(format!(
+            "Successfully renamed to \"{}\" RSS Feed with URL <{}>!",
+            feed.name, feed.url
+        ))
+        .await?;
     }
 
     Ok(())
