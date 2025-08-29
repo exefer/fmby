@@ -7,6 +7,7 @@ use crate::{
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use poise::serenity_prelude::{
     self as serenity, CreateEmbed, CreateEmbedFooter, CreateMessage, GenericChannelId, Timestamp,
+    futures::{self, StreamExt},
     prelude::*,
 };
 use sea_orm::TryIntoModel;
@@ -16,14 +17,16 @@ pub struct RssScheduler {
     ctx: Context,
     rss_manager: RssManager,
 }
+
 impl RssScheduler {
     pub fn new(ctx: Context) -> Self {
-        let rss_manager = RssManager::new(ctx.data::<Data>().database.pool.clone().into());
+        let rss_manager = RssManager::new(ctx.data::<Data>().database.pool.clone());
         Self { ctx, rss_manager }
     }
 
     async fn check_all_feeds(&self) -> Result<(), Error> {
         let feeds = self.rss_manager.get_feeds_to_check().await?;
+
         if feeds.is_empty() {
             return Ok(());
         }
@@ -32,46 +35,54 @@ impl RssScheduler {
 
         let semaphore = Arc::new(tokio::sync::Semaphore::new(
             self.ctx
-                .data::<Data>()
+                .data_ref::<Data>()
                 .rss_config
                 .settings
                 .max_concurrent_checks,
         ));
 
-        let handles: Vec<_> = feeds
-            .into_iter()
-            .map(|feed| {
-                let ctx_clone = self.ctx.clone();
-                let rss_manager_clone =
-                    RssManager::new(self.ctx.data::<Data>().database.pool.clone().into());
-                let semaphore_clone = semaphore.clone();
+        let mut tasks = futures::stream::FuturesUnordered::new();
 
-                tokio::spawn(async move {
-                    let _permit = semaphore_clone.acquire().await.unwrap();
-                    if let Err(e) =
-                        Self::check_single_feed(ctx_clone, rss_manager_clone, feed).await
-                    {
-                        tracing::error!("RSS feed check failed with error: {}", e);
+        for feed in feeds {
+            let sem = Arc::clone(&semaphore);
+
+            let task = async move {
+                let _permit = match sem.acquire().await {
+                    Ok(p) => p,
+                    Err(_) => {
+                        tracing::error!("Semaphore closed unexpectedly for feed {}", feed.name);
+                        return Ok(());
                     }
-                })
-            })
-            .collect();
+                };
+                self.check_single_feed(feed).await
+            };
 
-        for handle in handles {
-            let _ = handle.await;
+            tasks.push(task);
         }
+
+        while let Some(result) = tasks.next().await {
+            if let Err(e) = result {
+                tracing::error!("RSS feed check failed: {}", e);
+            }
+        }
+
         Ok(())
     }
 
-    async fn check_single_feed(
-        ctx: Context,
-        rss_manager: RssManager,
-        feed: rss_feeds::Model,
-    ) -> Result<(), Error> {
-        tracing::info!("Fetching RSS feed: '{}' at {}", feed.name, feed.url);
-        let _ = rss_manager.update_last_checked_at(feed.id).await;
+    async fn check_single_feed(&self, feed: rss_feeds::Model) -> Result<(), Error> {
+        tracing::info!("Fetching RSS feed '{}' at {}", feed.name, feed.url);
 
-        let fetcher = RssFetcher::new(&ctx.data::<Data>().rss_config);
+        if let Err(e) = self.rss_manager.update_last_checked_at(feed.id).await {
+            tracing::warn!(
+                "Failed to update last_checked_at for feed {}: {}",
+                feed.id,
+                e
+            );
+        }
+
+        let data = self.ctx.data_ref::<Data>();
+        let fetcher = RssFetcher::new(&data.rss_config);
+
         let entries = match fetcher.fetch_feed(&feed).await {
             Ok(entries) => entries,
             Err(e) => {
@@ -85,7 +96,6 @@ impl RssScheduler {
             return Ok(());
         }
 
-        let data = ctx.data_ref::<Data>();
         let max_entries = data.rss_config.settings.max_entries_per_check;
 
         let entries_to_post: Vec<_> = if data.rss_config.settings.debug_force_post {
@@ -103,7 +113,7 @@ impl RssScheduler {
                 .rev()
                 .collect()
         } else {
-            let new_entries = rss_manager.insert_feed_entries(entries).await?;
+            let new_entries = self.rss_manager.insert_feed_entries(entries).await?;
             if new_entries.is_empty() {
                 tracing::info!(
                     "All entries from '{}' have been previously processed",
@@ -120,22 +130,21 @@ impl RssScheduler {
         };
 
         for entry in entries_to_post {
-            Self::post_entry_to_discord(ctx.clone(), &rss_manager, &feed, entry).await?;
-
+            self.post_entry_to_discord(&feed, entry).await?;
             tokio::time::sleep(Duration::from_millis(500)).await;
         }
+
         Ok(())
     }
 
     async fn post_entry_to_discord(
-        ctx: Context,
-        rss_manager: &RssManager,
+        &self,
         feed: &rss_feeds::Model,
         entry: rss_feed_entries::Model,
     ) -> Result<(), Error> {
         let timestamp = entry.published_at.unwrap_or(entry.created_at);
         let timestamp_str = timestamp.to_rfc3339();
-        let data = ctx.data_ref::<Data>();
+        let data = self.ctx.data_ref::<Data>();
 
         let mut embed =
             CreateEmbed::new()
@@ -167,10 +176,11 @@ impl RssScheduler {
         embed = embed.footer(CreateEmbedFooter::new(format!("📡 {}", feed.name)));
 
         let message = GenericChannelId::new(feed.channel_id as u64)
-            .send_message(&ctx.http, CreateMessage::new().add_embed(embed))
+            .send_message(&self.ctx.http, CreateMessage::new().add_embed(embed))
             .await?;
 
-        if let Err(e) = rss_manager
+        if let Err(e) = self
+            .rss_manager
             .update_entry_message_id(entry.id, message.id.get())
             .await
         {
@@ -182,6 +192,7 @@ impl RssScheduler {
             entry.title,
             feed.channel_id
         );
+
         Ok(())
     }
 }

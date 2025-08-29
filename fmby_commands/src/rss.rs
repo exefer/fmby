@@ -67,7 +67,7 @@ pub async fn add(
 ) -> Result<(), Error> {
     match Url::parse(&url) {
         Ok(url) => {
-            let rss_manager = RssManager::new(ctx.data().database.pool.clone().into());
+            let rss_manager = RssManager::new(ctx.data().database.pool.clone());
             let feed = rss_feeds::ActiveModel {
                 id: Set(Uuid::new_v4()),
                 url: Set(url.to_string()),

@@ -1,13 +1,12 @@
 use fmby_entities::{prelude::*, rss_feed_entries, rss_feeds, sea_orm_active_enums::RssFeedStatus};
 use sea_orm::{Condition, QueryOrder, prelude::*, sea_query::OnConflict};
-use std::sync::Arc;
 
 pub struct RssManager {
-    pool: Arc<DatabaseConnection>,
+    pool: DatabaseConnection,
 }
 
 impl RssManager {
-    pub fn new(pool: Arc<DatabaseConnection>) -> Self {
+    pub fn new(pool: DatabaseConnection) -> Self {
         Self { pool }
     }
 
@@ -16,14 +15,14 @@ impl RssManager {
         new_feed: rss_feeds::ActiveModel,
     ) -> Result<rss_feeds::Model, DbErr> {
         let feed = RssFeeds::insert(new_feed)
-            .exec_with_returning(&*self.pool)
+            .exec_with_returning(&self.pool)
             .await?;
 
         Ok(feed)
     }
 
     pub async fn remove_feed(&self, id: Uuid) -> Result<bool, DbErr> {
-        let result = RssFeeds::delete_by_id(id).exec(&*self.pool).await?;
+        let result = RssFeeds::delete_by_id(id).exec(&self.pool).await?;
 
         Ok(result.rows_affected > 0)
     }
@@ -31,7 +30,7 @@ impl RssManager {
     pub async fn list_feeds(&self, guild_id: u64) -> Result<Vec<rss_feeds::Model>, DbErr> {
         let feeds = RssFeeds::find()
             .filter(rss_feeds::Column::GuildId.eq(guild_id))
-            .all(&*self.pool)
+            .all(&self.pool)
             .await?;
 
         Ok(feeds)
@@ -40,7 +39,7 @@ impl RssManager {
     pub async fn get_feed(&self, id: Uuid) -> Result<Option<rss_feeds::Model>, DbErr> {
         let feed = RssFeeds::find()
             .filter(rss_feeds::Column::Id.eq(id))
-            .one(&*self.pool)
+            .one(&self.pool)
             .await?;
 
         Ok(feed)
@@ -60,7 +59,7 @@ impl RssManager {
                     ),
             )
             .order_by_asc(rss_feeds::Column::LastCheckedAt)
-            .all(&*self.pool)
+            .all(&self.pool)
             .await?;
 
         Ok(feeds)
@@ -73,7 +72,7 @@ impl RssManager {
                 Expr::current_timestamp().into(),
             )
             .filter(rss_feeds::Column::Id.eq(id))
-            .exec(&*self.pool)
+            .exec(&self.pool)
             .await?;
 
         Ok(())
@@ -87,7 +86,7 @@ impl RssManager {
         RssFeedEntries::update_many()
             .col_expr(rss_feed_entries::Column::MessageId, Expr::value(message_id))
             .filter(rss_feed_entries::Column::Id.eq(entry_id))
-            .exec(&*self.pool)
+            .exec(&self.pool)
             .await?;
 
         Ok(())
@@ -106,7 +105,7 @@ impl RssManager {
                 .do_nothing()
                 .to_owned(),
             )
-            .exec_with_returning_many(&*self.pool)
+            .exec_with_returning_many(&self.pool)
             .await?;
 
         Ok(feed_entries)
