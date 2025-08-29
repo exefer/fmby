@@ -13,7 +13,7 @@ async fn autocomplete_name<'a>(
     partial: &'a str,
 ) -> serenity::CreateAutocompleteResponse<'a> {
     let feeds = RssFeeds::find()
-        .apply_if(Option::from(partial.is_empty()), |query, _| {
+        .apply_if((!partial.is_empty()).then_some(()), |query, _| {
             query.filter(Expr::col(rss_feeds::Column::Name).ilike(format!("%{}%", partial)))
         })
         .limit(25)
