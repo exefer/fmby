@@ -1,7 +1,10 @@
 use crate::{Context, Error};
 use fmby_core::rss::RssManager;
 use fmby_entities::{prelude::*, rss_feeds, sea_orm_active_enums::RssFeedStatus};
-use poise::serenity_prelude as serenity;
+use poise::{
+    CreateReply,
+    serenity_prelude::{self as serenity, CreateAllowedMentions},
+};
 use sea_orm::{
     ActiveValue::*, QueryFilter, QuerySelect, QueryTrait, prelude::*,
     sea_query::extension::postgres::PgExpr,
@@ -48,7 +51,7 @@ async fn autocomplete_name<'a>(
     slash_command,
     install_context = "Guild",
     interaction_context = "Guild",
-    subcommands("add", "remove", "rename"),
+    subcommands("add", "remove", "rename", "list"),
     subcommand_required
 )]
 pub async fn rss(_ctx: Context<'_>) -> Result<(), Error> {
@@ -148,6 +151,47 @@ pub async fn rename(
     Ok(())
 }
 
+/// Lists the RSS feeds the bot is subscribed to in the current channel
+#[poise::command(slash_command)]
+pub async fn list(
+    ctx: Context<'_>,
+    #[description = "Whether the response should only be visible to you"] ephemeral: Option<bool>,
+) -> Result<(), Error> {
+    let feeds = RssFeeds::find()
+        .filter(rss_feeds::Column::ChannelId.eq(ctx.channel_id().get()))
+        .apply_if(ctx.guild_id().map(|g| g.get()), |query, guild_id| {
+            query.filter(rss_feeds::Column::GuildId.eq(guild_id))
+        })
+        .all(&ctx.data().database.pool)
+        .await?;
+
+    let content = if feeds.is_empty() {
+        "There are no RSS feed subscriptions in this channel.".to_string()
+    } else {
+        feeds
+            .into_iter()
+            .map(|feed| {
+                format!(
+                    "- {}: <{}> (added by <@{}>)",
+                    feed.name, feed.url, feed.created_by
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    ctx.send(
+        CreateReply::new()
+            .content(content)
+            .reply(true)
+            .ephemeral(ephemeral.unwrap_or(true))
+            .allowed_mentions(CreateAllowedMentions::new().all_users(false)),
+    )
+    .await?;
+
+    Ok(())
+}
+
 #[poise::command(prefix_command)]
 pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error> {
     let fetcher = fmby_core::rss::RssFetcher::new(&fmby_core::rss::RssConfig::default());
@@ -159,7 +203,7 @@ pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error
     };
 
     message
-        .edit(ctx, poise::CreateReply::new().content(content))
+        .edit(ctx, CreateReply::new().content(content))
         .await?;
 
     Ok(())
