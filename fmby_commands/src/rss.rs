@@ -31,9 +31,7 @@ async fn autocomplete_name<'a>(
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
             query.filter(Expr::col(rss_feeds::Column::Name).ilike(format!("%{}%", partial)))
         })
-        .apply_if(ctx.guild_id().map(|g| g.get()), |query, guild_id| {
-            query.filter(rss_feeds::Column::GuildId.eq(guild_id))
-        })
+        .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().unwrap().get()))
         .limit(25)
         .all(&ctx.data().database.pool)
         .await
@@ -159,9 +157,7 @@ pub async fn list(
 ) -> Result<(), Error> {
     let feeds = RssFeeds::find()
         .filter(rss_feeds::Column::ChannelId.eq(ctx.channel_id().get()))
-        .apply_if(ctx.guild_id().map(|g| g.get()), |query, guild_id| {
-            query.filter(rss_feeds::Column::GuildId.eq(guild_id))
-        })
+        .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().unwrap().get()))
         .all(&ctx.data().database.pool)
         .await?;
 
