@@ -1,5 +1,5 @@
 use fmby_entities::{prelude::*, rss_feed_entries, rss_feeds, sea_orm_active_enums::RssFeedStatus};
-use sea_orm::{Condition, QueryOrder, prelude::*, sea_query::OnConflict};
+use sea_orm::{QueryOrder, prelude::*, sea_query::OnConflict};
 
 pub struct RssManager {
     pool: DatabaseConnection,
@@ -44,16 +44,12 @@ impl RssManager {
 
     pub async fn get_feeds_to_check(&self) -> Result<Vec<rss_feeds::Model>, DbErr> {
         let feeds = RssFeeds::find()
+            .filter(rss_feeds::Column::Status.eq(RssFeedStatus::Active))
             .filter(
-                Condition::all()
-                    .add(rss_feeds::Column::Status.eq(RssFeedStatus::Active))
-                    .add(
-                        Expr::col(rss_feeds::Column::LastCheckedAt).lt(Expr::current_timestamp()
-                            .sub(
-                                Expr::col(rss_feeds::Column::CheckIntervalMinutes)
-                                    .mul(Expr::cust("INTERVAL '1 minute'")),
-                            )),
-                    ),
+                Expr::col(rss_feeds::Column::LastCheckedAt).lt(Expr::current_timestamp().sub(
+                    Expr::col(rss_feeds::Column::CheckIntervalMinutes)
+                        .mul(Expr::cust("INTERVAL '1 minute'")),
+                )),
             )
             .order_by_asc(rss_feeds::Column::LastCheckedAt)
             .all(&self.pool)
