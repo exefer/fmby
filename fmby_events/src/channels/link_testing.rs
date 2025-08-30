@@ -1,12 +1,12 @@
 use fmby_core::{
-    constants::{DevChannel, link_testing::ForumTag},
+    constants::{FmhyChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
 use poise::serenity_prelude::{small_fixed_array::FixedArray, *};
 use std::collections::HashSet;
 
 fn is_thread_in_link_testing(thread: &GuildThread) -> bool {
-    thread.parent_id.get() == DevChannel::LinkTesting.id()
+    thread.parent_id.get() == FmhyChannel::LinkTesting.id()
 }
 
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {

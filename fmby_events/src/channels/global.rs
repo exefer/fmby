@@ -5,21 +5,30 @@ use fmby_core::{
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::*;
-use sea_orm::{ActiveValue::*, Iterable, prelude::*, sea_query::OnConflict};
+use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*, sea_query::OnConflict};
 
 fn is_add_links_channel(id: u64) -> bool {
-    id == FmhyChannel::AddLinks.id() || id == FmhyChannel::NsfwAddLinks.id()
+    matches!(id, x if x == FmhyChannel::AddLinks.id() || x == FmhyChannel::NsfwAddLinks.id())
+}
+
+fn is_remove_sites_channel(id: u64) -> bool {
+    matches!(id,
+        x if x == FmhyChannel::RemoveSites.id()
+            || x == FmhyChannel::NsfwRemoved.id()
+            || x == FmhyChannel::DeadSites.id()
+    )
+}
+
+fn is_recently_added_channel(id: u64) -> bool {
+    id == FmhyChannel::RecentlyAdded.id()
 }
 
 pub async fn on_message(ctx: &Context, message: &Message) {
     for (channel_id, needle) in AUTO_THREAD_MAPPINGS.iter() {
-        if message.channel_id != *channel_id {
-            continue;
-        }
-
-        if needle.is_none_or(|n| message.content.contains(n)) {
-            let channel_id = message.channel_id.expect_channel();
-            let _ = channel_id
+        if message.channel_id == *channel_id && needle.is_none_or(|n| message.content.contains(n)) {
+            let _ = message
+                .channel_id
+                .expect_channel()
                 .create_thread_from_message(
                     &ctx.http,
                     message.id,
@@ -31,36 +40,59 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         }
     }
 
-    let Some(ref urls) = extract_urls(&message.content) else {
+    if message.author.bot() {
+        return;
+    }
+
+    let Some(urls) = extract_urls(&message.content) else {
         return;
     };
 
-    let wiki_entries = urls
+    match urls
         .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
-        .await;
-
-    match wiki_entries {
-        Ok(wiki_entries) if !wiki_entries.is_empty() => {
-            let mut embed = CreateEmbed::new().title("Warning").color(Color::ORANGE);
-
-            for status in WikiUrlStatus::iter() {
-                if let Some(formatted) = wiki_entries.format_for_embed(&status) {
-                    let title = match status {
-                        WikiUrlStatus::Added => "Link(s) already in the wiki:",
-                        WikiUrlStatus::Pending => "Links(s) already in queue:",
-                        WikiUrlStatus::Removed => "Links(s) previously removed from the wiki:",
-                    };
-                    embed = embed.field(title, formatted, false);
+        .await
+    {
+        Ok(wiki_entries) if !wiki_entries.is_empty() => match message.channel_id.get() {
+            id if is_remove_sites_channel(id) || is_recently_added_channel(id) => {
+                for mut entry in wiki_entries
+                    .into_iter()
+                    .map(IntoActiveModel::into_active_model)
+                {
+                    entry.user_id = Set(Some(message.author.id.get() as i64));
+                    entry.message_id = Set(Some(message.id.get() as i64));
+                    entry.channel_id = Set(Some(message.channel_id.get() as i64));
+                    entry.status = Set(if is_remove_sites_channel(id) {
+                        WikiUrlStatus::Removed
+                    } else {
+                        WikiUrlStatus::Added
+                    });
+                    let _ = entry.update(&ctx.data::<Data>().database.pool).await;
                 }
             }
-
-            let builder = CreateMessage::new()
-                .add_embed(embed)
-                .reference_message(MessageReference::from(message))
-                .allowed_mentions(CreateAllowedMentions::new().replied_user(true));
-
-            let _ = message.channel_id.send_message(&ctx.http, builder).await;
-        }
+            _ => {
+                let mut embed = CreateEmbed::new().title("Warning").color(Color::ORANGE);
+                for status in WikiUrlStatus::iter() {
+                    if let Some(formatted) = wiki_entries.format_for_embed(&status) {
+                        let title = match status {
+                            WikiUrlStatus::Added => "Link(s) already in the wiki:",
+                            WikiUrlStatus::Pending => "Links(s) already in queue:",
+                            WikiUrlStatus::Removed => "Links(s) previously removed from the wiki:",
+                        };
+                        embed = embed.field(title, formatted, false);
+                    }
+                }
+                let _ = message
+                    .channel_id
+                    .send_message(
+                        &ctx.http,
+                        CreateMessage::new()
+                            .add_embed(embed)
+                            .reference_message(MessageReference::from(message))
+                            .allowed_mentions(CreateAllowedMentions::new().replied_user(true)),
+                    )
+                    .await;
+            }
+        },
         Ok(_) => {
             if !is_add_links_channel(message.channel_id.get()) {
                 return;
