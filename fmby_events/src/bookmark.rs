@@ -41,16 +41,13 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
                 .timestamp(Timestamp::now()),
         );
 
-        match user.id.direct_message(&ctx.http, builder).await {
-            Ok(m) => {
-                let _ = m
-                    .react(
-                        &ctx.http,
-                        ReactionType::Unicode(FixedString::from_str_trunc("❌")),
-                    )
-                    .await;
-            }
-            Err(_) => todo!(),
+        if let Ok(m) = user.id.direct_message(&ctx.http, builder).await {
+            let _ = m
+                .react(
+                    &ctx.http,
+                    ReactionType::Unicode(FixedString::from_str_trunc("❌")),
+                )
+                .await;
         }
     }
 

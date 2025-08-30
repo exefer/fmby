@@ -50,7 +50,7 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
         (old_tags.difference(&new_tags), false),
     ] {
         for tag in tags {
-            let text = match tag.get() {
+            let content = match tag.get() {
                 x if x == ForumTag::Rejected.id() && closing => {
                     Some(format!("{}: thread closed as rejected", owner))
                 }
@@ -64,13 +64,11 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
                 )),
                 _ => None,
             };
-            if let Some(text) = text
-                && let Err(_) = new
-                    .send_message(&ctx.http, CreateMessage::new().content(text))
-                    .await
-            {
-                todo!()
-            };
+            if let Some(content) = content {
+                let _ = new
+                    .send_message(&ctx.http, CreateMessage::new().content(content))
+                    .await;
+            }
         }
     }
 }
