@@ -37,10 +37,7 @@ impl RssManager {
     }
 
     pub async fn get_feed(&self, id: Uuid) -> Result<Option<rss_feeds::Model>, DbErr> {
-        let feed = RssFeeds::find()
-            .filter(rss_feeds::Column::Id.eq(id))
-            .one(&self.pool)
-            .await?;
+        let feed = RssFeeds::find_by_id(id).one(&self.pool).await?;
 
         Ok(feed)
     }
