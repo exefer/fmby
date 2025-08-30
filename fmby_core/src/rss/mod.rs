@@ -1,9 +1,9 @@
-mod rss_fetcher;
-mod rss_manager;
-mod rss_scheduler;
-pub use rss_fetcher::*;
-pub use rss_manager::*;
-pub use rss_scheduler::*;
+mod fetcher;
+mod manager;
+mod scheduler;
+pub use fetcher::*;
+pub use manager::*;
+pub use scheduler::*;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
