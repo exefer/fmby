@@ -2,7 +2,9 @@ use fmby_core::{
     constants::{FmhyChannel, link_testing::ForumTag},
     utils::url::extract_urls,
 };
-use poise::serenity_prelude::{small_fixed_array::FixedArray, *};
+use poise::serenity_prelude::{
+    CreateMessage, GuildThread, prelude::*, small_fixed_array::FixedArray,
+};
 use std::collections::HashSet;
 
 fn is_thread_in_link_testing(thread: &GuildThread) -> bool {

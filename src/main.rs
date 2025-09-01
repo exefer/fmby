@@ -1,7 +1,4 @@
-use poise::{
-    Prefix,
-    serenity_prelude::{self as serenity},
-};
+use poise::{Prefix, serenity_prelude as serenity};
 use std::sync::Arc;
 
 #[tokio::main]

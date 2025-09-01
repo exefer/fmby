@@ -1,4 +1,7 @@
-use poise::serenity_prelude::{small_fixed_array::FixedString, *};
+use poise::serenity_prelude::{
+    CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter, CreateMessage, Reaction, ReactionType,
+    Timestamp, prelude::*, small_fixed_array::FixedString,
+};
 
 pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
     let user = match reaction.user(&ctx.http).await {

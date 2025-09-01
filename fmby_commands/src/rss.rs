@@ -3,7 +3,7 @@ use fmby_core::rss::RssManager;
 use fmby_entities::{prelude::*, rss_feeds, sea_orm_active_enums::RssFeedStatus};
 use poise::{
     CreateReply,
-    serenity_prelude::{self as serenity, CreateAllowedMentions},
+    serenity_prelude::{AutocompleteChoice, CreateAllowedMentions, CreateAutocompleteResponse},
 };
 use sea_orm::{
     ActiveValue::*, QueryFilter, QuerySelect, QueryTrait, prelude::*,
@@ -26,7 +26,7 @@ async fn parse_uuid_or_reply(ctx: &Context<'_>, input: &str) -> Option<Uuid> {
 async fn autocomplete_name<'a>(
     ctx: Context<'a>,
     partial: &'a str,
-) -> serenity::CreateAutocompleteResponse<'a> {
+) -> CreateAutocompleteResponse<'a> {
     let feeds = RssFeeds::find()
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
             query.filter(Expr::col(rss_feeds::Column::Name).ilike(format!("%{}%", partial)))
@@ -39,10 +39,10 @@ async fn autocomplete_name<'a>(
 
     let choices: Vec<_> = feeds
         .into_iter()
-        .map(|feed| serenity::AutocompleteChoice::new(feed.name, feed.id.as_u128().to_string()))
+        .map(|feed| AutocompleteChoice::new(feed.name, feed.id.as_u128().to_string()))
         .collect();
 
-    serenity::CreateAutocompleteResponse::new().set_choices(choices)
+    CreateAutocompleteResponse::new().set_choices(choices)
 }
 
 #[poise::command(

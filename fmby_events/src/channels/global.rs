@@ -4,7 +4,10 @@ use fmby_core::{
     utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use poise::serenity_prelude::*;
+use poise::serenity_prelude::{
+    Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
+    MessageReference, prelude::*,
+};
 use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*, sea_query::OnConflict};
 
 fn is_add_links_channel(id: u64) -> bool {
