@@ -1,5 +1,4 @@
 use crate::{Context, Error};
-use fmby_core::rss::RssManager;
 use fmby_entities::{prelude::*, rss_feeds, sea_orm_active_enums::RssFeedStatus};
 use poise::{
     CreateReply,
@@ -65,7 +64,6 @@ pub async fn add(
 ) -> Result<(), Error> {
     match Url::parse(&url) {
         Ok(url) => {
-            let rss_manager = RssManager::new(ctx.data().database.pool.clone());
             let feed = rss_feeds::ActiveModel {
                 id: Set(Uuid::new_v4()),
                 url: Set(url.to_string()),
@@ -77,7 +75,7 @@ pub async fn add(
                 ..Default::default()
             };
 
-            rss_manager.add_feed(feed).await?;
+            feed.insert(&ctx.data().database.pool).await?;
 
             ctx.reply(format!(
                 "Successfully added \"{}\" RSS Feed with URL <{}>!",
