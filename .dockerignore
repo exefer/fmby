@@ -4,5 +4,6 @@ README.md
 .dockerignore
 .git
 .gitignore
+.github
 .env
 .env.*
