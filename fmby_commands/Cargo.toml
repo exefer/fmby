@@ -9,3 +9,4 @@ fmby_entities = { path = "../fmby_entities" }
 poise.workspace = true
 sea-orm.workspace = true
 url.workspace = true
+tokio.workspace = true
