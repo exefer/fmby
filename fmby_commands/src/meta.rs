@@ -5,8 +5,7 @@ use crate::{Context, Error};
     slash_command,
     prefix_command,
     category = "Meta",
-    install_context = "Guild|User",
-    interaction_context = "Guild|BotDm|PrivateChannel"
+    install_context = "Guild|User"
 )]
 pub async fn source(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("<https://github.com/exefer/fmby>").await?;
@@ -29,8 +28,7 @@ pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
     slash_command,
     prefix_command,
     category = "Meta",
-    install_context = "Guild|User",
-    interaction_context = "Guild|BotDm|PrivateChannel"
+    install_context = "Guild|User"
 )]
 pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
     let uptime = ctx.data().time_started.elapsed();
