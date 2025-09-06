@@ -1,6 +1,7 @@
 target
 Dockerfile
 README.md
+LICENSE
 .dockerignore
 .git
 .gitignore
