@@ -54,7 +54,15 @@ pub async fn sh(
     let output = output.lock().await;
     let output = output.join("");
 
-    ctx.say(format!("```ansi\n{}```", output)).await?;
+    ctx.say(format!(
+        "```ansi\n{}```",
+        if output.is_empty() {
+            "No output"
+        } else {
+            &output
+        }
+    ))
+    .await?;
 
     Ok(())
 }
