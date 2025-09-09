@@ -1,25 +1,5 @@
-use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
-use crate::utils::db::ChunkSize;
-use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use pulldown_cmark::{Event, Tag};
 use regex::Regex;
-use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
 use std::sync::LazyLock;
-
-#[derive(Debug, Clone)]
-pub struct WikiLink {
-    url: String,
-}
-
-impl WikiLink {
-    fn into_active_model(self) -> wiki_urls::ActiveModel {
-        wiki_urls::ActiveModel {
-            url: Set(self.url),
-            status: Set(WikiUrlStatus::Added),
-            ..Default::default()
-        }
-    }
-}
 
 pub fn clean_url(url: &str) -> &str {
     url.trim()
@@ -29,12 +9,12 @@ pub fn clean_url(url: &str) -> &str {
         .trim_end_matches('/')
 }
 
-static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+static URL_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(https?):\/\/(?:ww(?:w|\d+)\.)?((?:[\w_-]+(?:\.[\w_-]+)+)[\w.,@?^=%&:\/~+#-]*[\w@?^=%&~+-])").unwrap()
 });
 
 pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
-    let matches: Vec<String> = URL_REGEX
+    let matches: Vec<String> = URL_RE
         .find_iter(haystack)
         .map(|m| clean_url(m.as_str()).to_string())
         .collect();
@@ -44,52 +24,4 @@ pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
     } else {
         Some(matches)
     }
-}
-
-pub async fn fetch_wiki_links() -> anyhow::Result<Vec<WikiLink>> {
-    let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
-        .await?
-        .text()
-        .await?;
-    let parser = pulldown_cmark::Parser::new(&content);
-    let mut links = Vec::new();
-
-    for event in parser {
-        if let Event::Start(Tag::Link { dest_url, .. }) = event {
-            links.push(WikiLink {
-                url: clean_url(&dest_url).to_string(),
-            })
-        }
-    }
-
-    Ok(links)
-}
-
-pub async fn insert_wiki_urls(
-    pool: &DatabaseConnection,
-    mut entries: Vec<WikiLink>,
-) -> Result<(), DbErr> {
-    let chunk_size = WikiUrls::chunk_size();
-
-    while !entries.is_empty() {
-        let chunk: Vec<_> = entries
-            .drain(..chunk_size.min(entries.len()))
-            .map(WikiLink::into_active_model)
-            .collect();
-        let txn = pool.begin().await?;
-
-        WikiUrls::insert_many(chunk)
-            .on_conflict(
-                OnConflict::column(wiki_urls::Column::Url)
-                    .do_nothing()
-                    .to_owned(),
-            )
-            .do_nothing()
-            .exec(&txn)
-            .await?;
-
-        txn.commit().await?;
-    }
-
-    Ok(())
 }
