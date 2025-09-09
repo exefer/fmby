@@ -81,11 +81,16 @@ pub async fn refresh_db(ctx: Context<'_>) -> Result<(), Error> {
 pub async fn search(
     ctx: Context<'_>,
     #[description = "The term or phrase you want to search for in the wiki"] query: String,
+    #[min = 1]
+    #[max = 25]
+    #[description = "The maximum number of search results to return (default is 10)"]
+    limit: Option<usize>,
 ) -> Result<(), Error> {
     let result = fmby_core::utils::wiki::search_in_wiki(&query)
         .await
         .unwrap()
         .into_iter()
+        .take(limit.unwrap_or(10))
         .map(|s| format!("- {}\n", s))
         .collect::<String>();
 
