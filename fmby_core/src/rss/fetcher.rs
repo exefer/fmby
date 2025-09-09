@@ -117,8 +117,22 @@ impl RssFetcher {
         let image_url = entry
             .media
             .first()
-            .and_then(|m| m.thumbnails.first())
-            .map(|t| t.image.uri.clone())
+            .and_then(|m| {
+                m.thumbnails
+                    .first()
+                    .map(|m| m.image.uri.clone())
+                    .or_else(|| {
+                        m.content.first().and_then(|m| {
+                            if let (Some(url), Some(content_type)) = (&m.url, &m.content_type)
+                                && content_type.ty() == "image"
+                            {
+                                Some(url.to_string())
+                            } else {
+                                None
+                            }
+                        })
+                    })
+            })
             .or_else(|| {
                 entry
                     .summary
