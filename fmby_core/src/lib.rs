@@ -3,6 +3,7 @@ mod macros;
 
 pub mod constants;
 pub mod database;
+pub mod drama;
 pub mod error;
 pub mod rss;
 pub mod structs;

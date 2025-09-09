@@ -1,11 +1,12 @@
 pub mod fmby;
+pub mod fun;
 pub mod meta;
 pub mod rss;
 pub mod sql;
 pub mod system;
-pub use fmby_core::{
+pub(crate) use fmby_core::{
     error::Error,
-    structs::{Command, Context, Data},
+    structs::{Command, Context},
 };
 
 #[must_use]
@@ -16,6 +17,7 @@ pub fn commands() -> Vec<crate::Command> {
         .chain(sql::commands())
         .chain(rss::commands())
         .chain(system::commands())
+        .chain(fun::commands())
         .collect();
 
     commands

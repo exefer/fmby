@@ -34,6 +34,7 @@ async fn main() {
             has_started: std::sync::atomic::AtomicBool::new(false),
             database: fmby_core::database::FmbyDatabase::init().await,
             rss_config: fmby_core::rss::RssConfig::default(),
+            drama_config: fmby_core::drama::DramaConfig::from_config(),
         }))
         .await;
 
