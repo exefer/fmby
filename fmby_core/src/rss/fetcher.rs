@@ -11,7 +11,6 @@ pub struct RssFetcher {
 }
 
 impl RssFetcher {
-    /// Initialize a new fetcher instance with configuration settings
     pub fn new(config: &RssConfig) -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(config.fetcher.http_timeout_seconds))
@@ -22,7 +21,6 @@ impl RssFetcher {
         Self { client }
     }
 
-    /// Retrieves and processes RSS feed content from a given feed source
     pub async fn fetch_feed(
         &self,
         feed: &rss_feeds::Model,
@@ -71,7 +69,6 @@ impl RssFetcher {
         Ok(entries)
     }
 
-    /// Converts a feed entry data into a database-ready active model
     fn convert_to_active_model(
         &self,
         feed_id: Uuid,
@@ -143,7 +140,6 @@ impl RssFetcher {
         }
     }
 
-    /// Verifies that a given URL contains valid RSS or Atom feed data
     pub async fn validate_feed_url(&self, url: &str) -> anyhow::Result<String> {
         tracing::debug!("Validating feed URL: {}", url);
 

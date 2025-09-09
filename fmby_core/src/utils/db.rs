@@ -4,44 +4,6 @@ use sea_orm::{Iterable, prelude::*};
 
 #[serenity::async_trait]
 pub trait WikiUrlFinder {
-    /// Look up multiple wiki URL entries in a single database query.
-    ///
-    /// ## Arguments
-    ///
-    /// * `pool` - Reference to an active [`DatabaseConnection`].
-    /// * `urls` - Slice of URLs to look up.
-    ///
-    /// ## Returns
-    ///
-    /// A `Result` containing:
-    /// - `Ok(Vec<wiki_urls::Model>)`: all database rows where `wiki_urls.url`
-    ///   matches one of the given `urls`. The vector may be empty if none of the
-    ///   provided URLs exist in the database.
-    /// - `Err(DbErr)`: if the query fails.
-    ///
-    /// ### Notes
-    ///
-    /// - This function performs one `SELECT ... WHERE url IN (...)` query instead
-    ///   of executing a separate query per URL.
-    /// - The returned vector does **not** preserve the order of the input URLs.
-    ///   It will be in the order returned by the database.
-    /// - If you need to know which input URLs were missing, compare the returned
-    ///   models’ `url` field against your original list.
-    ///
-    /// ## Example
-    ///
-    /// ```ignore
-    /// let urls = vec![
-    ///     "example.com".to_string(),
-    ///     "example.org".to_string(),
-    /// ];
-    ///
-    /// let entries = urls.find_wiki_url_entries(&pool).await?;
-    ///
-    /// for entry in entries {
-    ///     println!("Found: {} -> {:?}", entry.url, entry);
-    /// }
-    /// ```
     async fn find_wiki_url_entries(
         &self,
         pool: &DatabaseConnection,
