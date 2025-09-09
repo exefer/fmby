@@ -186,13 +186,13 @@ impl RssFetcher {
     }
 }
 
-static NUMERIC_ENTITY_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"&#(\d+);").unwrap());
+static NUMERIC_ENTITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"&#(\d+);").unwrap());
 
 /// Converts HTML character entities to their corresponding Unicode characters
 /// Processes both numeric references (&#39;) and named entities (&amp;)
 pub fn decode_html_entities(html: &str) -> String {
     // Handle numeric character codes first
-    let result = NUMERIC_ENTITY_REGEX.replace_all(html, |caps: &regex::Captures| {
+    let result = NUMERIC_ENTITY_RE.replace_all(html, |caps: &regex::Captures| {
         caps.get(1)
             .and_then(|m| m.as_str().parse::<u32>().ok())
             .and_then(char::from_u32)
@@ -234,7 +234,7 @@ pub fn clean_html(html: &str) -> String {
     result.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-static IMG_REGEX: LazyLock<Regex> =
+static IMG_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>"#).unwrap());
 
 /// Locates the first image source URL within HTML markup
@@ -244,7 +244,7 @@ fn find_first_image(html: &str) -> Option<String> {
 
     // Use regex to find img elements with src attributes
     // Validate and return first valid image URL found
-    IMG_REGEX
+    IMG_RE
         .captures(&decoded)?
         .get(1)
         .map(|m| m.as_str().to_string())
