@@ -14,6 +14,6 @@ serde.workspace = true
 tracing.workspace = true
 serde_json.workspace = true
 rand.workspace = true
-pulldown-cmark = "0.13.0"
+pulldown-cmark = { version = "0.13.0", default-features = false }
 regex = "1.11.2"
 feed-rs = "2.3.1"
