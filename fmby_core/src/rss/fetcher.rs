@@ -1,10 +1,9 @@
+use crate::rss::RssConfig;
 use anyhow::anyhow;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, prelude::*, sqlx::types::chrono::Utc};
 use std::{sync::LazyLock, time::Duration};
-
-use crate::rss::RssConfig;
 
 pub struct RssFetcher {
     client: reqwest::Client,
@@ -116,9 +115,17 @@ impl RssFetcher {
             .filter(|s| !s.trim().is_empty());
 
         let image_url = entry
-            .summary
-            .as_ref()
-            .and_then(|s| find_first_image(&s.content))
+            .media
+            .first()
+            .and_then(|m| m.thumbnails.first())
+            .map(|t| t.image.uri.clone())
+            .or_else(|| {
+                entry
+                    .summary
+                    .as_ref()
+                    .and_then(|s| find_first_image(&s.content))
+                    .filter(|url| !url.is_empty())
+            })
             .or_else(|| {
                 entry
                     .content
