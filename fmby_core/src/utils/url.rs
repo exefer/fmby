@@ -1,7 +1,7 @@
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 use crate::utils::db::ChunkSize;
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use pulldown_cmark::{Event, Tag, TagEnd};
+use pulldown_cmark::{Event, Tag};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
 use std::sync::LazyLock;
@@ -9,14 +9,12 @@ use std::sync::LazyLock;
 #[derive(Debug, Clone)]
 pub struct WikiLink {
     url: String,
-    name: Option<String>,
 }
 
 impl WikiLink {
     fn into_active_model(self) -> wiki_urls::ActiveModel {
         wiki_urls::ActiveModel {
             url: Set(self.url),
-            name: Set(self.name),
             status: Set(WikiUrlStatus::Added),
             ..Default::default()
         }
@@ -54,32 +52,13 @@ pub async fn fetch_wiki_links() -> anyhow::Result<Vec<WikiLink>> {
         .text()
         .await?;
     let parser = pulldown_cmark::Parser::new(&content);
-
-    let mut current_url = String::new();
-    let mut current_name = String::new();
-    let mut collecting = false;
     let mut links = Vec::new();
 
     for event in parser {
-        match event {
-            Event::Start(Tag::Link { dest_url, .. }) => {
-                current_url = dest_url.to_string();
-                current_name.clear();
-                collecting = true;
-            }
-            Event::End(TagEnd::Link) if collecting => {
-                links.push(WikiLink {
-                    url: clean_url(&current_url).to_string(),
-                    name: if current_name.is_empty() {
-                        None
-                    } else {
-                        Some(std::mem::take(&mut current_name))
-                    },
-                });
-                collecting = false;
-            }
-            Event::Text(text) if collecting => current_name.push_str(&text),
-            _ => {}
+        if let Event::Start(Tag::Link { dest_url, .. }) = event {
+            links.push(WikiLink {
+                url: clean_url(&dest_url).to_string(),
+            })
         }
     }
 

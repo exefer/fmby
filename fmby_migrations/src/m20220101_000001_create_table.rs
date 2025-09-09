@@ -7,7 +7,6 @@ use sea_orm_migration::{
 pub struct Migration;
 
 const UQ_WIKI_URLS_URL: &str = "uq_wiki_urls_url";
-const IDX_WIKI_URLS_NAME: &str = "idx_wiki_urls_name";
 const UQ_RSS_FEEDS_URL_CHANNEL_ID: &str = "uq_rss_feeds_url_channel_id";
 const IDX_RSS_FEEDS_ACTIVE_LAST_CHECKED_AT: &str = "idx_rss_feeds_active_last_checked_at";
 const FK_RSS_FEED_ENTRIES_FEED_ID: &str = "fk_rss_feed_entries_feed_id";
@@ -45,7 +44,6 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(WikiUrls::Id))
                     .col(text(WikiUrls::Url))
-                    .col(text_null(WikiUrls::Name))
                     .col(big_integer_null(WikiUrls::ChannelId))
                     .col(big_integer_null(WikiUrls::UserId))
                     .col(big_integer_null(WikiUrls::MessageId))
@@ -116,16 +114,6 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name(IDX_WIKI_URLS_NAME)
-                    .table(WikiUrls::Table)
-                    .col(WikiUrls::Name)
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_index(
-                Index::create()
                     .name(UQ_RSS_FEEDS_URL_CHANNEL_ID)
                     .table(RssFeeds::Table)
                     .col(RssFeeds::Url)
@@ -188,10 +176,6 @@ impl MigrationTrait for Migration {
             .await?;
 
         manager
-            .drop_index(Index::drop().name(IDX_WIKI_URLS_NAME).to_owned())
-            .await?;
-
-        manager
             .drop_index(Index::drop().name(UQ_RSS_FEEDS_URL_CHANNEL_ID).to_owned())
             .await?;
 
@@ -240,7 +224,6 @@ pub enum WikiUrls {
     Table,
     Id,
     Url,
-    Name,
     ChannelId,
     UserId,
     MessageId,
@@ -276,6 +259,16 @@ pub enum RssFeeds {
 }
 
 #[derive(DeriveIden)]
+pub enum RssFeedStatus {
+    #[sea_orm(iden = "rss_feed_status")]
+    Enum,
+    #[sea_orm(iden = "active")]
+    Active,
+    #[sea_orm(iden = "inactive")]
+    Inactive,
+}
+
+#[derive(DeriveIden)]
 pub enum RssFeedEntries {
     Table,
     Id,
@@ -288,14 +281,4 @@ pub enum RssFeedEntries {
     PublishedAt,
     CreatedAt,
     MessageId,
-}
-
-#[derive(DeriveIden)]
-pub enum RssFeedStatus {
-    #[sea_orm(iden = "rss_feed_status")]
-    Enum,
-    #[sea_orm(iden = "active")]
-    Active,
-    #[sea_orm(iden = "inactive")]
-    Inactive,
 }
