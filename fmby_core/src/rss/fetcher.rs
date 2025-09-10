@@ -114,7 +114,7 @@ impl RssFetcher {
             })
             .filter(|s| !s.trim().is_empty());
 
-        let image_url = entry
+        let thumbnail_url = entry
             .media
             .first()
             .and_then(|m| {
@@ -155,7 +155,7 @@ impl RssFetcher {
             title: Set(title),
             link: Set(link),
             description: Set(description),
-            image_url: Set(image_url),
+            thumbnail_url: Set(thumbnail_url),
             published_at: Set(entry.published.or(entry.updated).map(Into::into)),
             ..Default::default()
         }

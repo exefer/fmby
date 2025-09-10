@@ -169,8 +169,8 @@ impl RssScheduler {
             };
         }
 
-        if let Some(image_url) = &entry.image_url {
-            embed = embed.image(image_url);
+        if let Some(thumbnail_url) = &entry.thumbnail_url {
+            embed = embed.image(thumbnail_url);
         }
 
         embed = embed.footer(CreateEmbedFooter::new(format!("📡 {}", feed.name)));

@@ -89,7 +89,7 @@ impl MigrationTrait for Migration {
                     .col(text(RssFeedEntries::Title))
                     .col(text_null(RssFeedEntries::Link))
                     .col(text_null(RssFeedEntries::Description))
-                    .col(text_null(RssFeedEntries::ImageUrl))
+                    .col(text_null(RssFeedEntries::ThumbnailUrl))
                     .col(timestamp_with_time_zone_null(RssFeedEntries::PublishedAt))
                     .col(
                         timestamp_with_time_zone(RssFeedEntries::CreatedAt)
@@ -277,7 +277,7 @@ pub enum RssFeedEntries {
     Title,
     Link,
     Description,
-    ImageUrl,
+    ThumbnailUrl,
     PublishedAt,
     CreatedAt,
     MessageId,
