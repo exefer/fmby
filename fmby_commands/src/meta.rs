@@ -1,6 +1,6 @@
 use crate::{Context, Error};
 
-/// Post the link to the bot's source code.
+/// Post the link to the bot's source code
 #[poise::command(
     slash_command,
     prefix_command,
@@ -13,7 +13,7 @@ pub async fn source(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Shutdown the bot gracefully.
+/// Shutdown the bot gracefully
 #[poise::command(prefix_command, owners_only, hide_in_help)]
 pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("**Bailing out, you are on your own. Good luck.**")
@@ -23,7 +23,7 @@ pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Displays FMBY's uptime
+/// Tells you how long the bot has been up for
 #[poise::command(
     slash_command,
     prefix_command,
