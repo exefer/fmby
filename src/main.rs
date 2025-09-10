@@ -1,4 +1,4 @@
-use poise::{Prefix, serenity_prelude as serenity};
+use poise::serenity_prelude as serenity;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -9,8 +9,7 @@ async fn main() {
     let options = poise::FrameworkOptions {
         commands: fmby_commands::commands(),
         prefix_options: poise::PrefixFrameworkOptions {
-            prefix: Some("||".into()),
-            additional_prefixes: vec![Prefix::Literal("$")],
+            prefix: Some("?".into()),
             mention_as_prefix: true,
             execute_untracked_edits: false,
             case_insensitive_commands: true,
