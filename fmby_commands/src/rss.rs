@@ -188,17 +188,14 @@ pub async fn list(
 
 #[poise::command(prefix_command)]
 pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error> {
-    let fetcher = fmby_core::rss::RssFetcher::new(&fmby_core::rss::RssConfig::default());
-    let message = ctx.reply("Fetching RSS feed...").await?;
+    let fetcher = fmby_core::rss::RssFetcher::new(&Default::default());
 
     let content = match fetcher.validate_feed_url(&url).await {
         Ok(title) => format!("The feed title is: {}", title),
         Err(e) => e.to_string(),
     };
 
-    message
-        .edit(ctx, CreateReply::new().content(content))
-        .await?;
+    ctx.reply(content).await?;
 
     Ok(())
 }
