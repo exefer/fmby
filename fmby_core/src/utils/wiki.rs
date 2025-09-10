@@ -6,12 +6,11 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
-use std::sync::LazyLock;
-
-static LIST_ITEM_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\s*\*").unwrap());
 
 pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
     let query = query.to_lowercase();
+    let query_re = Regex::new(&format!("(?i){}", regex::escape(&query))).unwrap();
+
     let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
         .await?
         .text()
@@ -19,6 +18,7 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
 
     let mut result = Vec::new();
     let mut current_headings = Vec::new();
+    let mut heading_path = String::new();
     let mut parser_iter = Parser::new(&content).into_offset_iter();
 
     while let Some((event, range)) = parser_iter.next() {
@@ -33,6 +33,11 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                     current_headings.truncate(level - 1);
                 }
                 current_headings.push(heading_text);
+                heading_path = current_headings
+                    .iter()
+                    .map(|s| format!("**{}**", s))
+                    .collect::<Vec<_>>()
+                    .join(" / ");
             }
             Event::Start(Tag::Item) => {
                 let line_start = range.start;
@@ -40,20 +45,16 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                     .find('\n')
                     .map(|i| line_start + i)
                     .unwrap_or(content.len());
-
                 let line = &content[line_start..line_end];
 
-                if LIST_ITEM_RE.is_match(line) {
-                    let formatted_line = format!(
-                        "{} ► {}",
-                        current_headings
-                            .iter()
-                            .map(|s| format!("**{}**", s))
-                            .collect::<Vec<_>>()
-                            .join(" / "),
-                        &line[2..]
-                    );
-                    if formatted_line.to_lowercase().contains(&query) {
+                if let Some(stripped) = line.strip_prefix("* ") {
+                    let mut formatted_line =
+                        String::with_capacity(heading_path.len() + stripped.len() + 3);
+                    formatted_line.push_str(&heading_path);
+                    formatted_line.push_str(" ► ");
+                    formatted_line.push_str(stripped);
+
+                    if query_re.is_match(&formatted_line) {
                         result.push(formatted_line);
                     }
                 }
