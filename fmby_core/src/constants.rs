@@ -29,6 +29,7 @@ pub enum FmhyChannel {
     ToDo,
     NsfwAddLinks,
     NsfwRemoved,
+    NsfwRecentlyAdded,
     FreeStuff,
 }
 
@@ -41,6 +42,7 @@ id_str_enum!(FmhyChannel {
     ToDo => 997040018604433479,
     NsfwAddLinks => 997292029056925808,
     NsfwRemoved => 1136688501514047498,
+    NsfwRecentlyAdded => 1199379440292085901,
     FreeStuff => 976770662205104150,
 });
 

@@ -16,12 +16,12 @@ fn is_add_links_channel(id: u64) -> bool {
 
 fn is_remove_sites_channel(id: u64) -> bool {
     id == FmhyChannel::RemoveSites.id()
-            || id == FmhyChannel::NsfwRemoved.id()
-            || id == FmhyChannel::DeadSites.id()
-    }
+        || id == FmhyChannel::NsfwRemoved.id()
+        || id == FmhyChannel::DeadSites.id()
+}
 
 fn is_recently_added_channel(id: u64) -> bool {
-    id == FmhyChannel::RecentlyAdded.id()
+    id == FmhyChannel::RecentlyAdded.id() || id == FmhyChannel::NsfwRecentlyAdded.id()
 }
 
 pub async fn on_message(ctx: &Context, message: &Message) {
