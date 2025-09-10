@@ -113,7 +113,7 @@ pub async fn fetch_wiki_links() -> anyhow::Result<Vec<WikiLink>> {
     Ok(links)
 }
 
-pub async fn insert_wiki_urls(
+pub async fn insert_wiki_links(
     pool: &DatabaseConnection,
     mut entries: Vec<WikiLink>,
 ) -> Result<(), DbErr> {

@@ -64,7 +64,7 @@ pub async fn refresh_db(ctx: Context<'_>) -> Result<(), Error> {
         let pool = &ctx.data().database.pool;
         let before = WikiUrls::find().count(pool).await.unwrap_or(0);
 
-        if let Err(e) = fmby_core::utils::wiki::insert_wiki_urls(pool, wiki_links).await {
+        if let Err(e) = fmby_core::utils::wiki::insert_wiki_links(pool, wiki_links).await {
             ctx.reply(format!("{}", e)).await?;
         } else {
             let after = WikiUrls::find().count(pool).await.unwrap_or(0);
