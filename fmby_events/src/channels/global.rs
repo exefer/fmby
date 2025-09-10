@@ -11,16 +11,14 @@ use poise::serenity_prelude::{
 use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*, sea_query::OnConflict};
 
 fn is_add_links_channel(id: u64) -> bool {
-    matches!(id, x if x == FmhyChannel::AddLinks.id() || x == FmhyChannel::NsfwAddLinks.id())
+    id == FmhyChannel::AddLinks.id() || id == FmhyChannel::NsfwAddLinks.id()
 }
 
 fn is_remove_sites_channel(id: u64) -> bool {
-    matches!(id,
-        x if x == FmhyChannel::RemoveSites.id()
-            || x == FmhyChannel::NsfwRemoved.id()
-            || x == FmhyChannel::DeadSites.id()
-    )
-}
+    id == FmhyChannel::RemoveSites.id()
+            || id == FmhyChannel::NsfwRemoved.id()
+            || id == FmhyChannel::DeadSites.id()
+    }
 
 fn is_recently_added_channel(id: u64) -> bool {
     id == FmhyChannel::RecentlyAdded.id()
