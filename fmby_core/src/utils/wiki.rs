@@ -47,16 +47,16 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                     .unwrap_or(content.len());
                 let line = &content[line_start..line_end];
 
-                if let Some(stripped) = line.strip_prefix("* ") {
+                if let Some(stripped) = line.strip_prefix("* ")
+                    && (query_re.is_match(stripped) || query_re.is_match(&heading_path))
+                {
                     let mut formatted_line =
                         String::with_capacity(heading_path.len() + stripped.len() + 3);
                     formatted_line.push_str(&heading_path);
                     formatted_line.push_str(" ► ");
                     formatted_line.push_str(stripped);
 
-                    if query_re.is_match(&formatted_line) {
-                        result.push(formatted_line);
-                    }
+                    result.push(formatted_line);
                 }
             }
             _ => {}
