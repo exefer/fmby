@@ -1,10 +1,16 @@
 use poise::serenity_prelude::{self as serenity, GatewayIntents};
 use std::sync::Arc;
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
     let _ = dotenvy::dotenv();
-    tracing_subscriber::fmt().init();
+
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info"))
+        .add_directive("wordcloud=off".parse().unwrap());
+
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let options = poise::FrameworkOptions {
         commands: fmby_commands::commands(),

@@ -51,6 +51,7 @@ tracing = "0.1.41"
 url = "2.5.7"
 serde_json = "1.0.143"
 rand = "0.9.2"
+regex = "1.11.2"
 
 [patch.'https://github.com/serenity-rs/serenity']
 serenity = { git = 'https://github.com/jamesbt365/serenity', branch = 'components-v2-withtag-gradient-nameplates/decor-resolved' }
