@@ -1,11 +1,6 @@
-use crate::{
-    constants::FMHY_SINGLE_PAGE_ENDPOINT,
-    utils::{db::ChunkSize, url::clean_url},
-};
-use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use pulldown_cmark::{Event, Parser, Tag, TagEnd};
+use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
+use pulldown_cmark::{CowStr, Event, Parser, Tag, TagEnd};
 use regex::Regex;
-use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
 
 pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
     let query = query.to_lowercase();
@@ -66,6 +61,19 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
     Ok(result)
 }
 
+pub fn collect_wiki_urls<'a>(content: &'a str) -> Vec<CowStr<'a>> {
+    let mut parser = Parser::new(content);
+    let mut urls = Vec::new();
+
+    while let Some(event) = parser.next() {
+        if let Event::Start(Tag::Item) = event {
+            urls.extend(collect_links_in_item(&mut parser));
+        }
+    }
+
+    urls
+}
+
 fn collect_heading_text<'a, I>(parser: &mut I) -> String
 where
     I: Iterator<Item = (Event<'a>, std::ops::Range<usize>)>,
@@ -81,64 +89,19 @@ where
     text
 }
 
-pub struct WikiLink {
-    url: String,
-}
-
-impl WikiLink {
-    fn into_active_model(self) -> wiki_urls::ActiveModel {
-        wiki_urls::ActiveModel {
-            url: Set(self.url),
-            status: Set(WikiUrlStatus::Added),
-            ..Default::default()
-        }
-    }
-}
-
-pub async fn fetch_wiki_links() -> anyhow::Result<Vec<WikiLink>> {
-    let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
-        .await?
-        .text()
-        .await?;
-    let parser = Parser::new(&content);
-    let mut links = Vec::new();
+fn collect_links_in_item<'a, I>(parser: &mut I) -> Vec<CowStr<'a>>
+where
+    I: Iterator<Item = Event<'a>>,
+{
+    let mut urls = Vec::new();
 
     for event in parser {
-        if let Event::Start(Tag::Link { dest_url, .. }) = event {
-            links.push(WikiLink {
-                url: clean_url(&dest_url).to_string(),
-            })
+        match event {
+            Event::Start(Tag::Link { dest_url, .. }) => urls.push(dest_url),
+            Event::End(TagEnd::Item) => break,
+            _ => {}
         }
     }
 
-    Ok(links)
-}
-
-pub async fn insert_wiki_links(
-    pool: &DatabaseConnection,
-    mut entries: Vec<WikiLink>,
-) -> Result<(), DbErr> {
-    let chunk_size = WikiUrls::chunk_size();
-
-    while !entries.is_empty() {
-        let chunk: Vec<_> = entries
-            .drain(..chunk_size.min(entries.len()))
-            .map(WikiLink::into_active_model)
-            .collect();
-        let txn = pool.begin().await?;
-
-        WikiUrls::insert_many(chunk)
-            .on_conflict(
-                OnConflict::column(wiki_urls::Column::Url)
-                    .do_nothing()
-                    .to_owned(),
-            )
-            .do_nothing()
-            .exec(&txn)
-            .await?;
-
-        txn.commit().await?;
-    }
-
-    Ok(())
+    urls
 }
