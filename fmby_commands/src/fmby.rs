@@ -84,15 +84,16 @@ pub async fn search(
     #[min = 1]
     #[max = 25]
     #[description = "The maximum number of search results to return (default is 10)"]
-    limit: Option<usize>,
+    limit: Option<u8>,
 ) -> Result<(), Error> {
     let result: String = fmby_core::utils::wiki::search_in_wiki(&query)
         .await
         .unwrap()
         .into_iter()
-        .take(limit.unwrap_or(10))
-        .map(|s| format!("- {}\n", s))
-        .collect();
+        .take(limit.unwrap_or(10) as usize)
+        .map(|s| format!("- {}", s))
+        .collect::<Vec<_>>()
+        .join("\n");
 
     ctx.send(
         CreateReply::new().embed(
