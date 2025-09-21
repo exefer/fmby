@@ -2,7 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "rss_feed_status")]
 pub enum RssFeedStatus {
     #[sea_orm(string_value = "active")]
@@ -10,7 +10,7 @@ pub enum RssFeedStatus {
     #[sea_orm(string_value = "inactive")]
     Inactive,
 }
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "wiki_url_status")]
 pub enum WikiUrlStatus {
     #[sea_orm(string_value = "added")]
