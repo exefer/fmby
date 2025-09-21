@@ -45,7 +45,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         return;
     }
 
-    let Some(urls) = extract_urls(&message.content) else {
+    let Some(urls) = extract_urls(&message.content, true) else {
         return;
     };
 

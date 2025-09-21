@@ -18,7 +18,7 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
 
     if let Some(message_id) = thread.base.last_message_id
         && let Ok(message) = thread.id.widen().message(&ctx.http, message_id).await
-        && let Some(_urls) = extract_urls(&message.content)
+        && let Some(_urls) = extract_urls(&message.content, true)
     {
         // TODO: Maybe update the database records with the first message ID and the thread ID
     }
