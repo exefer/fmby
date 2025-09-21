@@ -11,3 +11,4 @@ sea-orm.workspace = true
 url.workspace = true
 tokio.workspace = true
 rand.workspace = true
+reqwest.workspace = true
