@@ -27,6 +27,19 @@ impl FmhyChannel {
     pub const FREE_STUFF: u64 = 976770662205104150;
 }
 
+pub struct FmhyServerRole;
+
+impl FmhyServerRole {
+    pub const PRIVATEER: u64 = 1166287715524943912;
+    pub const BOOSTER: u64 = 974702070508691597;
+    pub const ATLANTEAN: u64 = 956006107564879876;
+    pub const PIRATE: u64 = 956006107564879878;
+    pub const FIRST_MATE: u64 = 956006107564879880;
+    pub const FM_CHAT_MOD: u64 = 1250583645631156285;
+    pub const CELESTIAL: u64 = 1195383987347140658;
+    pub const CAPTAIN: u64 = 956006107577454603;
+}
+
 pub struct FmhyFeedRole;
 
 impl FmhyFeedRole {
@@ -37,6 +50,14 @@ impl FmhyFeedRole {
     pub const WIKI_POLLS: u64 = 1198651940507238521;
     pub const KAI_POLLS: u64 = 1204590431933964298;
     pub const CAPTURE_FREE_STUFF: u64 = 1295437463837212745;
+}
+
+pub struct FmhyMiscRole;
+
+impl FmhyMiscRole {
+    pub const NSFW: u64 = 1195247836846108842;
+    pub const EPIC_GAMER: u64 = 1191092193188909066;
+    pub const AOC: u64 = 0;
 }
 
 pub mod link_testing {
