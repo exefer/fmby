@@ -67,11 +67,13 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                     } else {
                         WikiUrlStatus::Added
                     });
+
                     let _ = entry.update(&ctx.data::<Data>().database.pool).await;
                 }
             }
             _ => {
                 let mut embed = CreateEmbed::new().title("Warning").color(Color::ORANGE);
+
                 for status in WikiUrlStatus::iter() {
                     if let Some(formatted) = wiki_entries.format_for_embed(&status) {
                         let title = match status {
@@ -79,9 +81,11 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                             WikiUrlStatus::Pending => "Links(s) already in queue:",
                             WikiUrlStatus::Removed => "Links(s) previously removed from the wiki:",
                         };
+
                         embed = embed.field(title, formatted, false);
                     }
                 }
+
                 let _ = message
                     .channel_id
                     .send_message(
