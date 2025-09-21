@@ -11,17 +11,17 @@ use poise::serenity_prelude::{
 use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*, sea_query::OnConflict};
 
 fn is_add_links_channel(id: u64) -> bool {
-    id == FmhyChannel::AddLinks.id() || id == FmhyChannel::NsfwAddLinks.id()
+    id == FmhyChannel::ADD_LINKS || id == FmhyChannel::NSFW_ADD_LINKS
 }
 
 fn is_remove_sites_channel(id: u64) -> bool {
-    id == FmhyChannel::RemoveSites.id()
-        || id == FmhyChannel::NsfwRemoved.id()
-        || id == FmhyChannel::DeadSites.id()
+    id == FmhyChannel::REMOVE_SITES
+        || id == FmhyChannel::NSFW_REMOVED
+        || id == FmhyChannel::DEAD_SITES
 }
 
 fn is_recently_added_channel(id: u64) -> bool {
-    id == FmhyChannel::RecentlyAdded.id() || id == FmhyChannel::NsfwRecentlyAdded.id()
+    id == FmhyChannel::RECENTLY_ADDED || id == FmhyChannel::NSFW_RECENTLY_ADDED
 }
 
 pub async fn on_message(ctx: &Context, message: &Message) {

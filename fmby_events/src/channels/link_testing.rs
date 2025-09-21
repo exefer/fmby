@@ -8,7 +8,7 @@ use poise::serenity_prelude::{
 use std::collections::HashSet;
 
 fn is_thread_in_link_testing(thread: &GuildThread) -> bool {
-    thread.parent_id.get() == FmhyChannel::LinkTesting.id()
+    thread.parent_id.get() == FmhyChannel::LINK_TESTING
 }
 
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {
@@ -53,14 +53,14 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
     ] {
         for tag in tags {
             let content = match tag.get() {
-                x if x == ForumTag::Rejected.id() && closing => {
+                x if x == ForumTag::REJECTED && closing => {
                     Some(format!("{}: thread closed as rejected", owner))
                 }
-                x if x == ForumTag::Added.id() && closing => Some(format!(
+                x if x == ForumTag::ADDED && closing => Some(format!(
                     "{}: thread closed as approved; link(s) will be added to the wiki.",
                     owner
                 )),
-                x if x == ForumTag::Rejected.id() && !closing => Some(format!(
+                x if x == ForumTag::REJECTED && !closing => Some(format!(
                     "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the link(s) you were testing.",
                     owner
                 )),
