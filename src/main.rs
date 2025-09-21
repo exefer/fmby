@@ -9,7 +9,7 @@ async fn main() {
     let options = poise::FrameworkOptions {
         commands: fmby_commands::commands(),
         prefix_options: poise::PrefixFrameworkOptions {
-            prefix: Some("?".into()),
+            prefix: Some(r"\".into()),
             mention_as_prefix: true,
             execute_untracked_edits: false,
             case_insensitive_commands: true,
