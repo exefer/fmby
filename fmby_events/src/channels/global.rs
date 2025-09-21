@@ -26,7 +26,9 @@ fn is_recently_added_channel(id: u64) -> bool {
 
 pub async fn on_message(ctx: &Context, message: &Message) {
     for (channel_id, needle) in AUTO_THREAD_MAPPINGS.iter() {
-        if message.channel_id == *channel_id && needle.is_none_or(|n| message.content.contains(n)) {
+        if message.channel_id.get() == *channel_id
+            && needle.is_none_or(|n| message.content.contains(n))
+        {
             let _ = message
                 .channel_id
                 .expect_channel()
@@ -55,18 +57,20 @@ pub async fn on_message(ctx: &Context, message: &Message) {
     {
         Ok(wiki_entries) if !wiki_entries.is_empty() => match message.channel_id.get() {
             id if is_remove_sites_channel(id) || is_recently_added_channel(id) => {
+                let status = if is_remove_sites_channel(id) {
+                    WikiUrlStatus::Removed
+                } else {
+                    WikiUrlStatus::Added
+                };
+
                 for mut entry in wiki_entries
                     .into_iter()
                     .map(IntoActiveModel::into_active_model)
                 {
                     entry.user_id = Set(Some(message.author.id.get() as i64));
                     entry.message_id = Set(Some(message.id.get() as i64));
-                    entry.channel_id = Set(Some(message.channel_id.get() as i64));
-                    entry.status = Set(if is_remove_sites_channel(id) {
-                        WikiUrlStatus::Removed
-                    } else {
-                        WikiUrlStatus::Added
-                    });
+                    entry.channel_id = Set(Some(id as i64));
+                    entry.status = Set(status);
 
                     let _ = entry.update(&ctx.data::<Data>().database.pool).await;
                 }
