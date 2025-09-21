@@ -50,7 +50,7 @@ impl From<OnlineStatusChoice> for OnlineStatus {
 }
 
 /// Sets the bot's online status
-#[poise::command(slash_command, owners_only)]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), Error> {
     ctx.serenity_context().set_status(status.into());
     ctx.reply("Done!").await?;
@@ -59,7 +59,7 @@ pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), 
 }
 
 /// Sets the bot's activity to a custom message
-#[poise::command(slash_command, owners_only)]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
     ctx.serenity_context()
         .set_activity(Some(ActivityData::custom(state)));
@@ -106,7 +106,7 @@ pub async fn search(
 /// Migrate existing messages from designated channels into the wiki database
 // by extracting URLs, determining their status (pending, added, removed),
 // and storing them with associated metadata.
-#[poise::command(owners_only, slash_command)]
+#[poise::command(slash_command, owners_only)]
 pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
     let start = std::time::Instant::now();
     let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
