@@ -9,7 +9,7 @@ name = "fmby_migrations"
 path = "src/lib.rs"
 
 [dependencies]
-tokio = { workspace = true }
+tokio.workspace = true
 
 
 [dependencies.sea-orm-migration]
