@@ -133,6 +133,14 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
         let mut messages = GenericChannelId::new(channel_id)
             .messages_iter(&ctx)
             .boxed();
+        let status = match channel_id {
+            FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS => WikiUrlStatus::Pending,
+            FmhyChannel::RECENTLY_ADDED | FmhyChannel::NSFW_RECENTLY_ADDED => WikiUrlStatus::Added,
+            FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
+                WikiUrlStatus::Removed
+            }
+            _ => WikiUrlStatus::Pending,
+        };
 
         while let Some(Ok(message)) = messages.next().await {
             if message.author.bot() {
@@ -146,11 +154,9 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                 continue;
             };
 
-            let (status, filtered_urls) = match channel_id {
-                FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS => {
-                    (WikiUrlStatus::Pending, urls)
-                }
-                FmhyChannel::RECENTLY_ADDED | FmhyChannel::NSFW_RECENTLY_ADDED => {
+            let filtered_urls = match status {
+                WikiUrlStatus::Pending => urls,
+                WikiUrlStatus::Added => {
                     let urls_in_wiki = urls
                         .into_iter()
                         .filter(|url| content.contains(url))
@@ -160,9 +166,9 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                         continue;
                     }
 
-                    (WikiUrlStatus::Added, urls_in_wiki)
+                    urls_in_wiki
                 }
-                FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
+                WikiUrlStatus::Removed => {
                     let urls_not_in_wiki = urls
                         .into_iter()
                         .filter(|url| !content.contains(url))
@@ -172,9 +178,8 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                         continue;
                     }
 
-                    (WikiUrlStatus::Removed, urls_not_in_wiki)
+                    urls_not_in_wiki
                 }
-                _ => (WikiUrlStatus::Pending, urls),
             };
 
             urls_processed += filtered_urls.len() as u32;
