@@ -1,4 +1,4 @@
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, GatewayIntents};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -23,7 +23,12 @@ async fn main() {
     let framework = poise::Framework::new(options);
 
     let token = serenity::Token::from_env("FMBY_TOKEN").expect("FMBY_TOKEN is not set.");
-    let intents = serenity::GatewayIntents::all();
+    let intents = GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGE_REACTIONS;
 
     let client = serenity::Client::builder(token, intents)
         .framework(framework)
