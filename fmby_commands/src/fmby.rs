@@ -28,7 +28,7 @@ pub async fn fmby(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Debug, poise::ChoiceParameter)]
+#[derive(poise::ChoiceParameter)]
 pub enum OnlineStatusChoice {
     Online,
     Idle,
@@ -58,11 +58,40 @@ pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), 
     Ok(())
 }
 
-/// Sets the bot's activity to a custom message
+#[derive(poise::ChoiceParameter)]
+pub enum ActivityTypeChoice {
+    Playing,
+    Listening,
+    Streaming,
+    Watching,
+    Competing,
+    Custom,
+}
+
+/// Sets the bot's activity
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
-pub async fn activity(ctx: Context<'_>, state: String) -> Result<(), Error> {
-    ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom(state)));
+pub async fn activity(
+    ctx: Context<'_>,
+    #[description = "Type of activity to display"] activity_type: ActivityTypeChoice,
+    #[description = "Text describing the activity"] text: String,
+    #[description = "Extra information (like streaming URL) if required"] extra: Option<String>,
+) -> Result<(), Error> {
+    let activity = match activity_type {
+        ActivityTypeChoice::Playing => ActivityData::playing(&text),
+        ActivityTypeChoice::Listening => ActivityData::listening(&text),
+        ActivityTypeChoice::Streaming => {
+            let Some(url) = extra else {
+                ctx.reply("You must provide a URL when streaming.").await?;
+                return Ok(());
+            };
+            ActivityData::streaming(&text, url)?
+        }
+        ActivityTypeChoice::Watching => ActivityData::watching(&text),
+        ActivityTypeChoice::Competing => ActivityData::competing(&text),
+        ActivityTypeChoice::Custom => ActivityData::custom(&text),
+    };
+
+    ctx.serenity_context().set_activity(Some(activity));
     ctx.reply("Done!").await?;
 
     Ok(())
