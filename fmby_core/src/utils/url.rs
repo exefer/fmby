@@ -24,6 +24,7 @@ pub fn extract_urls(haystack: &str, clean: bool) -> Option<Vec<String>> {
                 url.to_string()
             }
         })
+        .filter(|s| !s.contains("discord.com/channels"))
         .collect();
 
     (!matches.is_empty()).then_some(matches)
