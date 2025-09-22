@@ -190,7 +190,7 @@ static NUMERIC_ENTITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"&#(\d+
 
 /// Converts HTML character entities to their corresponding Unicode characters
 /// Processes both numeric references (&#39;) and named entities (&amp;)
-pub fn decode_html_entities(html: &str) -> String {
+fn decode_html_entities(html: &str) -> String {
     // Handle numeric character codes first
     let result = NUMERIC_ENTITY_RE.replace_all(html, |caps: &regex::Captures| {
         caps.get(1)
@@ -215,7 +215,7 @@ pub fn decode_html_entities(html: &str) -> String {
 
 /// Removes HTML markup and decodes entities from text content
 /// Returns clean text suitable for display or storage
-pub fn clean_html(html: &str) -> String {
+fn clean_html(html: &str) -> String {
     let decoded = decode_html_entities(html);
     let mut result = String::new();
     let mut in_tag = false;
