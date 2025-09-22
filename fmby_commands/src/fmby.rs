@@ -1,10 +1,7 @@
 use crate::{Context, Error};
 use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
-    utils::{
-        db::ChunkSize,
-        url::{clean_url, extract_urls},
-    },
+    utils::{db::ChunkSize, url::extract_urls},
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
@@ -178,12 +175,12 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
 
             messages_processed += 1;
 
-            let Some(urls) = extract_urls(&message.content, false) else {
+            let Some(urls) = extract_urls(&message.content, true) else {
                 messages_skipped += 1;
                 continue;
             };
 
-            let filtered_urls = match status {
+            let urls = match status {
                 WikiUrlStatus::Pending => urls,
                 WikiUrlStatus::Added => {
                     let urls_in_wiki = urls
@@ -211,10 +208,9 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                 }
             };
 
-            urls_processed += filtered_urls.len() as u32;
+            urls_processed += urls.len() as u32;
 
-            for url in &filtered_urls {
-                let url = clean_url(url).to_string();
+            for url in urls {
                 entries
                     .entry(url.clone())
                     .or_insert_with(|| wiki_urls::ActiveModel {
