@@ -22,14 +22,11 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
     if let Some(message_id) = thread.base.last_message_id
         && let Ok(message) = thread.id.widen().message(&ctx.http, message_id).await
         && let Some(urls) = extract_urls(&message.content, true)
-        && let Ok(wiki_entries) = urls
+        && let Ok(entries) = urls
             .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
             .await
     {
-        for mut entry in wiki_entries
-            .into_iter()
-            .map(IntoActiveModel::into_active_model)
-        {
+        for mut entry in entries.into_iter().map(IntoActiveModel::into_active_model) {
             entry.user_id = Set(Some(message.author.id.get() as i64));
             entry.message_id = Set(Some(message.id.get() as i64));
             entry.channel_id = Set(Some(thread.id.get() as i64));
