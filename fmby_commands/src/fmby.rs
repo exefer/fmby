@@ -165,7 +165,7 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
             FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
                 WikiUrlStatus::Removed
             }
-            _ => WikiUrlStatus::Pending,
+            _ => continue,
         };
 
         while let Some(Ok(message)) = messages.next().await {
