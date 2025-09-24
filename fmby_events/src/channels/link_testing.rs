@@ -10,12 +10,8 @@ use poise::serenity_prelude::{
 use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*};
 use std::collections::HashSet;
 
-fn is_thread_in_link_testing(thread: &GuildThread) -> bool {
-    thread.parent_id.get() == FmhyChannel::LINK_TESTING
-}
-
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {
-    if !is_thread_in_link_testing(thread) {
+    if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
     };
 
@@ -36,7 +32,7 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
         }
     }
 
-    if *newly_created == Some(true) {
+    if newly_created.is_some_and(|v| v) {
         let builder = CreateMessage::new().content(format!(
             "Thread opened by {} - join in, share your thoughts, and keep the discussion going!",
             thread.owner_id.mention()
@@ -47,9 +43,9 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
 }
 
 pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &GuildThread) {
-    if !is_thread_in_link_testing(new) {
+    if new.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
-    }
+    };
 
     let old_tags: HashSet<_> = old
         .as_ref()
