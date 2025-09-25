@@ -34,22 +34,18 @@ pub enum OnlineStatusChoice {
     Offline,
 }
 
-impl From<OnlineStatusChoice> for OnlineStatus {
-    fn from(online_status: OnlineStatusChoice) -> Self {
-        match online_status {
-            OnlineStatusChoice::Online => OnlineStatus::Online,
-            OnlineStatusChoice::Idle => OnlineStatus::Idle,
-            OnlineStatusChoice::DoNotDisturb => OnlineStatus::DoNotDisturb,
-            OnlineStatusChoice::Invisible => OnlineStatus::Invisible,
-            OnlineStatusChoice::Offline => OnlineStatus::Offline,
-        }
-    }
-}
-
 /// Sets the bot's online status
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), Error> {
-    ctx.serenity_context().set_status(status.into());
+    let status = match status {
+        OnlineStatusChoice::Online => OnlineStatus::Online,
+        OnlineStatusChoice::Idle => OnlineStatus::Idle,
+        OnlineStatusChoice::DoNotDisturb => OnlineStatus::DoNotDisturb,
+        OnlineStatusChoice::Invisible => OnlineStatus::Invisible,
+        OnlineStatusChoice::Offline => OnlineStatus::Offline,
+    };
+
+    ctx.serenity_context().set_status(status);
     ctx.reply("Done!").await?;
 
     Ok(())
