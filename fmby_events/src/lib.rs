@@ -1,4 +1,7 @@
-use fmby_core::{error::Error, rss::RssScheduler, start_background_task, structs::Data};
+use fmby_core::{
+    error::Error, rss::RssScheduler, start_background_task, structs::Data,
+    tasks::stale_remover::StaleRemover,
+};
 use poise::serenity_prelude::{self as serenity, FullEvent};
 mod bookmark;
 mod channels;
@@ -29,6 +32,7 @@ pub async fn event_handler(ctx: &serenity::Context, event: &FullEvent) -> Result
                 println!("Logged in as {}", data_about_bot.user.tag());
 
                 start_background_task::<RssScheduler>(ctx).await;
+                start_background_task::<StaleRemover>(ctx).await;
             }
         }
         FullEvent::Message { new_message, .. } => {
