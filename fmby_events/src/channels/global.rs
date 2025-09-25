@@ -49,11 +49,10 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         _ => None,
     };
 
-    let entries = urls
+    if let Ok(entries) = urls
         .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
-        .await;
-
-    if let Ok(entries) = entries {
+        .await
+    {
         if !entries.is_empty() {
             match status {
                 Some(WikiUrlStatus::Added) | Some(WikiUrlStatus::Removed) => {
