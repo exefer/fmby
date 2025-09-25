@@ -14,6 +14,8 @@ pub struct Model {
     pub user_id: Option<i64>,
     pub message_id: Option<i64>,
     pub guild_id: Option<i64>,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
     pub status: WikiUrlStatus,
 }
 

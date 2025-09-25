@@ -220,6 +220,8 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                         channel_id: Set(Some(channel_id as i64)),
                         guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
                         status: Set(status),
+                        created_at: Set(message.timestamp.fixed_offset()),
+                        updated_at: Set(message.timestamp.fixed_offset()),
                         ..Default::default()
                     });
             }

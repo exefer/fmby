@@ -7,7 +7,7 @@ use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use poise::serenity_prelude::{
     CreateMessage, GuildThread, prelude::*, small_fixed_array::FixedArray,
 };
-use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*};
+use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
 
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {
@@ -26,6 +26,7 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
             entry.user_id = Set(Some(message.author.id.get() as i64));
             entry.message_id = Set(Some(message.id.get() as i64));
             entry.channel_id = Set(Some(thread.id.get() as i64));
+            entry.updated_at = Set(Utc::now().into());
             entry.status = Set(WikiUrlStatus::Pending);
 
             let _ = entry.update(&ctx.data::<Data>().database.pool).await;

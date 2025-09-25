@@ -48,6 +48,14 @@ impl MigrationTrait for Migration {
                     .col(big_integer_null(WikiUrls::UserId))
                     .col(big_integer_null(WikiUrls::MessageId))
                     .col(big_integer_null(WikiUrls::GuildId))
+                    .col(
+                        timestamp_with_time_zone(WikiUrls::CreatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp_with_time_zone(WikiUrls::UpdatedAt)
+                            .default(Expr::current_timestamp()),
+                    )
                     .col(custom(WikiUrls::Status, WikiUrlStatus::Enum))
                     .to_owned(),
             )
@@ -228,6 +236,8 @@ pub enum WikiUrls {
     UserId,
     MessageId,
     GuildId,
+    CreatedAt,
+    UpdatedAt,
     Status,
 }
 

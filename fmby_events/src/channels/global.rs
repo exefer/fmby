@@ -8,6 +8,7 @@ use poise::serenity_prelude::{
     Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
     MessageReference, prelude::*,
 };
+use sea_orm::sqlx::types::chrono::Utc;
 use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*};
 
 pub async fn on_message(ctx: &Context, message: &Message) {
@@ -60,6 +61,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         entry.user_id = Set(Some(message.author.id.get() as i64));
                         entry.message_id = Set(Some(message.id.get() as i64));
                         entry.channel_id = Set(Some(message.channel_id.get() as i64));
+                        entry.updated_at = Set(Utc::now().into());
                         entry.status = Set(status.unwrap());
 
                         let _ = entry.update(&ctx.data::<Data>().database.pool).await;
