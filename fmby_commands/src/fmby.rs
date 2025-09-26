@@ -213,11 +213,11 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                         url: Set(url),
                         user_id: Set(Some(message.author.id.get() as i64)),
                         message_id: Set(Some(message.id.get() as i64)),
-                        channel_id: Set(Some(channel_id as i64)),
+                        channel_id: Set(Some(message.channel_id.get() as i64)),
                         guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
-                        status: Set(status),
                         created_at: Set(message.timestamp.fixed_offset()),
                         updated_at: Set(message.timestamp.fixed_offset()),
+                        status: Set(status),
                         ..Default::default()
                     });
             }
