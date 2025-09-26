@@ -1,10 +1,7 @@
 use crate::{Context, Error};
 use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
-    utils::{
-        db::ChunkSize,
-        url::{clean_url, extract_urls},
-    },
+    utils::{db::ChunkSize, url::extract_urls},
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
@@ -37,22 +34,18 @@ pub enum OnlineStatusChoice {
     Offline,
 }
 
-impl From<OnlineStatusChoice> for OnlineStatus {
-    fn from(online_status: OnlineStatusChoice) -> Self {
-        match online_status {
-            OnlineStatusChoice::Online => OnlineStatus::Online,
-            OnlineStatusChoice::Idle => OnlineStatus::Idle,
-            OnlineStatusChoice::DoNotDisturb => OnlineStatus::DoNotDisturb,
-            OnlineStatusChoice::Invisible => OnlineStatus::Invisible,
-            OnlineStatusChoice::Offline => OnlineStatus::Offline,
-        }
-    }
-}
-
 /// Sets the bot's online status
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn status(ctx: Context<'_>, status: OnlineStatusChoice) -> Result<(), Error> {
-    ctx.serenity_context().set_status(status.into());
+    let status = match status {
+        OnlineStatusChoice::Online => OnlineStatus::Online,
+        OnlineStatusChoice::Idle => OnlineStatus::Idle,
+        OnlineStatusChoice::DoNotDisturb => OnlineStatus::DoNotDisturb,
+        OnlineStatusChoice::Invisible => OnlineStatus::Invisible,
+        OnlineStatusChoice::Offline => OnlineStatus::Offline,
+    };
+
+    ctx.serenity_context().set_status(status);
     ctx.reply("Done!").await?;
 
     Ok(())
@@ -168,7 +161,7 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
             FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
                 WikiUrlStatus::Removed
             }
-            _ => WikiUrlStatus::Pending,
+            _ => continue,
         };
 
         while let Some(Ok(message)) = messages.next().await {
@@ -178,12 +171,12 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
 
             messages_processed += 1;
 
-            let Some(urls) = extract_urls(&message.content, false) else {
+            let Some(urls) = extract_urls(&message.content, true) else {
                 messages_skipped += 1;
                 continue;
             };
 
-            let filtered_urls = match status {
+            let urls = match status {
                 WikiUrlStatus::Pending => urls,
                 WikiUrlStatus::Added => {
                     let urls_in_wiki = urls
@@ -211,18 +204,19 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
                 }
             };
 
-            urls_processed += filtered_urls.len() as u32;
+            urls_processed += urls.len() as u32;
 
-            for url in &filtered_urls {
-                let url = clean_url(url).to_string();
+            for url in urls {
                 entries
                     .entry(url.clone())
                     .or_insert_with(|| wiki_urls::ActiveModel {
                         url: Set(url),
                         user_id: Set(Some(message.author.id.get() as i64)),
                         message_id: Set(Some(message.id.get() as i64)),
-                        channel_id: Set(Some(channel_id as i64)),
+                        channel_id: Set(Some(message.channel_id.get() as i64)),
                         guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
+                        created_at: Set(message.timestamp.fixed_offset()),
+                        updated_at: Set(message.timestamp.fixed_offset()),
                         status: Set(status),
                         ..Default::default()
                     });

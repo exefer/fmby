@@ -1,6 +1,8 @@
 pub const FMHY_SINGLE_PAGE_ENDPOINT: &str = "https://api.fmhy.net/single-page";
-pub const AUTO_THREAD_MAPPINGS: &[(u64, Option<&str>)] =
-    &[(FmhyChannel::FREE_STUFF, Some("956006107564879873"))];
+pub const AUTO_THREAD_MAPPINGS: &[(u64, Option<&str>)] = &[
+    (FmhyChannel::FREE_STUFF, Some("956006107564879873")),
+    (FmhyChannel::SECRET_RESOURCES, None),
+];
 
 pub struct DevChannel;
 
@@ -25,6 +27,7 @@ impl FmhyChannel {
     pub const NSFW_REMOVED: u64 = 1136688501514047498;
     pub const NSFW_RECENTLY_ADDED: u64 = 1199379440292085901;
     pub const FREE_STUFF: u64 = 976770662205104150;
+    pub const SECRET_RESOURCES: u64 = 1089999083856470016;
 }
 
 pub struct FmhyServerRole;

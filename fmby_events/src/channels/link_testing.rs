@@ -7,39 +7,33 @@ use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use poise::serenity_prelude::{
     CreateMessage, GuildThread, prelude::*, small_fixed_array::FixedArray,
 };
-use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*};
+use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
 
-fn is_thread_in_link_testing(thread: &GuildThread) -> bool {
-    thread.parent_id.get() == FmhyChannel::LINK_TESTING
-}
-
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {
-    if !is_thread_in_link_testing(thread) {
+    if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
     };
 
     if let Some(message_id) = thread.base.last_message_id
         && let Ok(message) = thread.id.widen().message(&ctx.http, message_id).await
         && let Some(urls) = extract_urls(&message.content, true)
-        && let Ok(wiki_entries) = urls
+        && let Ok(entries) = urls
             .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
             .await
     {
-        for mut entry in wiki_entries
-            .into_iter()
-            .map(IntoActiveModel::into_active_model)
-        {
+        for mut entry in entries.into_iter().map(IntoActiveModel::into_active_model) {
             entry.user_id = Set(Some(message.author.id.get() as i64));
             entry.message_id = Set(Some(message.id.get() as i64));
             entry.channel_id = Set(Some(thread.id.get() as i64));
+            entry.updated_at = Set(Utc::now().into());
             entry.status = Set(WikiUrlStatus::Pending);
 
             let _ = entry.update(&ctx.data::<Data>().database.pool).await;
         }
     }
 
-    if *newly_created == Some(true) {
+    if newly_created.is_some_and(|v| v) {
         let builder = CreateMessage::new().content(format!(
             "Thread opened by {} - join in, share your thoughts, and keep the discussion going!",
             thread.owner_id.mention()
@@ -50,9 +44,9 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
 }
 
 pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &GuildThread) {
-    if !is_thread_in_link_testing(new) {
+    if new.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
-    }
+    };
 
     let old_tags: HashSet<_> = old
         .as_ref()

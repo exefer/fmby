@@ -6,6 +6,7 @@ pub mod drama;
 pub mod error;
 pub mod rss;
 pub mod structs;
+pub mod tasks;
 pub mod utils;
 
 pub use background_task::*;
