@@ -5,7 +5,7 @@ use fmby_core::{
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::{
-    Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
+    Channel, Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
     MessageReference, prelude::*,
 };
 use sea_orm::sqlx::types::chrono::Utc;
@@ -67,6 +67,22 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                     }
                 }
                 Some(WikiUrlStatus::Pending) | None => {
+                    if status.is_none() {
+                        match message.channel(&ctx.http).await {
+                            Ok(Channel::GuildThread(thread)) => {
+                                if !matches!(
+                                    thread.parent_id.get(),
+                                    FmhyChannel::ADD_LINKS
+                                        | FmhyChannel::NSFW_ADD_LINKS
+                                        | FmhyChannel::LINK_TESTING
+                                ) {
+                                    return;
+                                }
+                            }
+                            _ => return,
+                        }
+                    }
+
                     let mut embed = CreateEmbed::new().title("Warning").color(Color::ORANGE);
 
                     for status in WikiUrlStatus::iter() {
