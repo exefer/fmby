@@ -67,7 +67,7 @@ pub mod link_testing {
     pub struct ForumTag;
 
     impl ForumTag {
-        pub const ADDED: u64 = 1407275958280392724;
-        pub const REJECTED: u64 = 1407275979314954280;
+        pub const ADDED: u64 = 1252866356546900091;
+        pub const REJECTED: u64 = 1255077991566803038;
     }
 }
