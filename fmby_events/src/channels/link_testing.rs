@@ -64,7 +64,7 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
         for tag in tags {
             let content = match tag.get() {
                 x if x == ForumTag::REJECTED && closing => {
-                    Some(format!("{}: thread closed as rejected", owner))
+                    Some(format!("{}: thread closed as rejected.", owner))
                 }
                 x if x == ForumTag::ADDED && closing => Some(format!(
                     "{}: thread closed as approved; link(s) will be added to the wiki.",
