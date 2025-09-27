@@ -10,7 +10,7 @@ use poise::serenity_prelude::{
 use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
 
-pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created: &Option<bool>) {
+pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_created: &Option<bool>) {
     if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
     };
@@ -31,15 +31,6 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, newly_created
 
             let _ = entry.update(&ctx.data::<Data>().database.pool).await;
         }
-    }
-
-    if newly_created.is_some_and(|v| v) {
-        let builder = CreateMessage::new().content(format!(
-            "Thread opened by {} - join in, share your thoughts, and keep the discussion going!",
-            thread.owner_id.mention()
-        ));
-
-        let _ = thread.send_message(&ctx.http, builder).await;
     }
 }
 
