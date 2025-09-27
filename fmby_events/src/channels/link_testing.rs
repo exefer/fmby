@@ -5,7 +5,7 @@ use fmby_core::{
 };
 use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use poise::serenity_prelude::{
-    CreateMessage, GuildThread, prelude::*, small_fixed_array::FixedArray,
+    CreateMessage, GetMessages, GuildThread, prelude::*, small_fixed_array::FixedArray,
 };
 use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
@@ -15,8 +15,13 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_create
         return;
     };
 
-    if let Some(message_id) = thread.base.last_message_id
-        && let Ok(message) = thread.id.widen().message(&ctx.http, message_id).await
+    if let Some(message) = thread
+        .id
+        .widen()
+        .messages(&ctx.http, GetMessages::new().limit(1))
+        .await
+        .ok()
+        .and_then(|m| m.into_iter().next())
         && let Some(urls) = extract_urls(&message.content, true)
         && let Ok(entries) = urls
             .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
