@@ -3,4 +3,4 @@
 [![LoC](https://tokei.rs/b1/github/exefer/fmby)](https://github.com/exefer/fmby)
 
 A remake of FMHY/bot.
-This remake focuses on code readability, modularity, and ease of development with SeaORM and Poise.
+I am very new to the Rust language, so you can expect code improvements over time.
