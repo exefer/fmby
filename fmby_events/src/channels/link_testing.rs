@@ -11,7 +11,7 @@ use std::collections::HashSet;
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_created: &Option<bool>) {
     if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
-    };
+    }
 
     if let Some(message) = thread
         .id
