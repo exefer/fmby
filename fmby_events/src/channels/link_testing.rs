@@ -61,15 +61,15 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
         (old_tags.difference(&new_tags), false),
     ] {
         for tag in tags {
-            let content = match tag.get() {
-                x if x == ForumTag::REJECTED && closing => {
+            let content = match (tag.get(), closing) {
+                (ForumTag::REJECTED, true) => {
                     Some(format!("{}: thread closed as rejected.", owner))
                 }
-                x if x == ForumTag::ADDED && closing => Some(format!(
+                (ForumTag::ADDED, true) => Some(format!(
                     "{}: thread closed as approved; link(s) will be added to the wiki.",
                     owner
                 )),
-                x if x == ForumTag::REJECTED && !closing => Some(format!(
+                (ForumTag::REJECTED, false) => Some(format!(
                     "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the link(s) you were testing.",
                     owner
                 )),
