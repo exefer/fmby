@@ -171,7 +171,7 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
 
             messages_processed += 1;
 
-            let Some(urls) = extract_urls(&message.content, true) else {
+            let Some(urls) = extract_urls(&message.content) else {
                 messages_skipped += 1;
                 continue;
             };

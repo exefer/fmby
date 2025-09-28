@@ -13,18 +13,11 @@ static URL_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(https?):\/\/(?:ww(?:w|\d+)\.)?((?:[\w_-]+(?:\.[\w_-]+)+)[\w.,@?^=%&:\/~+#-]*[\w@?^=%&~+-])").unwrap()
 });
 
-pub fn extract_urls(haystack: &str, clean: bool) -> Option<Vec<String>> {
+pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
     let matches: Vec<String> = URL_RE
         .find_iter(haystack)
-        .map(|m| {
-            let url = m.as_str();
-            if clean {
-                clean_url(url).to_string()
-            } else {
-                url.to_string()
-            }
-        })
-        .filter(|s| !s.contains("discord.com/channels"))
+        .map(|m| clean_url(m.as_str()).to_string())
+        .filter(|s| !s.starts_with("discord.com/channels") && !s.starts_with("fmhy.net"))
         .collect();
 
     (!matches.is_empty()).then_some(matches)

@@ -20,7 +20,7 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_create
         .await
         .ok()
         .and_then(|m| m.into_iter().next())
-        && let Some(urls) = extract_urls(&message.content, true)
+        && let Some(urls) = extract_urls(&message.content)
         && let Ok(entries) = urls
             .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
             .await
