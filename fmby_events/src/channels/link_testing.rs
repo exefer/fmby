@@ -4,9 +4,7 @@ use fmby_core::{
     utils::{db::WikiUrlFinder, url::extract_urls},
 };
 use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
-use poise::serenity_prelude::{
-    CreateMessage, GetMessages, GuildThread, prelude::*, small_fixed_array::FixedArray,
-};
+use poise::serenity_prelude::{CreateMessage, GetMessages, GuildThread, prelude::*};
 use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
 
@@ -42,15 +40,20 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_create
 pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &GuildThread) {
     if new.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
-    };
+    }
 
     let old_tags: HashSet<_> = old
         .as_ref()
-        .map_or(&FixedArray::default(), |c| &c.applied_tags)
-        .iter()
-        .copied()
+        .map(|o| o.applied_tags.iter().copied())
+        .into_iter()
+        .flatten()
         .collect();
     let new_tags: HashSet<_> = new.applied_tags.iter().copied().collect();
+
+    if old_tags == new_tags {
+        return;
+    }
+
     let owner = new.owner_id.mention();
 
     for (tags, closing) in [
