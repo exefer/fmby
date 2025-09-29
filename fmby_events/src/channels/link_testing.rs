@@ -66,11 +66,11 @@ pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &Gu
                     Some(format!("{}: thread closed as rejected.", owner))
                 }
                 (ForumTag::ADDED, true) => Some(format!(
-                    "{}: thread closed as approved; link(s) will be added to the wiki.",
+                    "{}: thread closed as approved; links will be added to the wiki.",
                     owner
                 )),
                 (ForumTag::REJECTED, false) => Some(format!(
-                    "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the link(s) you were testing.",
+                    "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the links you were testing.",
                     owner
                 )),
                 _ => None,

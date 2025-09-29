@@ -31,7 +31,7 @@ impl RssScheduler {
             return Ok(());
         }
 
-        tracing::info!("Processing {} RSS feed(s) for new content", feeds.len());
+        tracing::info!("Processing {} RSS feeds for new content", feeds.len());
 
         let semaphore = Arc::new(tokio::sync::Semaphore::new(
             self.ctx

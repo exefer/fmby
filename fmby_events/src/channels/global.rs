@@ -88,11 +88,9 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                     for status in WikiUrlStatus::iter() {
                         if let Some(formatted) = entries.format_for_embed(&status) {
                             let title = match status {
-                                WikiUrlStatus::Added => "Link(s) already in the wiki:",
-                                WikiUrlStatus::Pending => "Links(s) already in queue:",
-                                WikiUrlStatus::Removed => {
-                                    "Links(s) previously removed from the wiki:"
-                                }
+                                WikiUrlStatus::Added => "Links already in the wiki:",
+                                WikiUrlStatus::Pending => "Links already in queue:",
+                                WikiUrlStatus::Removed => "Links previously removed from the wiki:",
                             };
                             embed = embed.field(title, formatted, false);
                         }
