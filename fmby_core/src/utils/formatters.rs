@@ -9,6 +9,7 @@ impl UrlFormatter for Vec<String> {
         if self.is_empty() {
             return None;
         }
+
         Some(
             self.iter()
                 .map(|url| format!("- {url}"))
