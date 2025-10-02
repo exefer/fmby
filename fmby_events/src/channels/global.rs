@@ -191,15 +191,15 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
         && message.reactions.iter().any(|m| {
             m.me && m.reaction_type == ReactionType::Unicode(FixedString::from_str_trunc("❌"))
         })
-        && (user == message.author
-            || member.roles.iter().any(|r| {
-                matches!(
-                    r.get(),
-                    FmhyServerRole::FIRST_MATE
-                        | FmhyServerRole::CELESTIAL
-                        | FmhyServerRole::CAPTAIN
-                )
-            }))
+        && (member.roles.iter().any(|r| {
+            matches!(
+                r.get(),
+                FmhyServerRole::FIRST_MATE | FmhyServerRole::CELESTIAL | FmhyServerRole::CAPTAIN
+            )
+        }) || message
+            .referenced_message
+            .as_ref()
+            .is_some_and(|m| user.id == m.author.id))
     {
         let _ = message.delete(&ctx.http, None).await;
 
