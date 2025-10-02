@@ -10,8 +10,8 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
     CreateReply,
     serenity_prelude::{
-        ActivityData, CreateEmbed, CreateEmbedFooter, EditMessage, GenericChannelId, OnlineStatus,
-        futures::StreamExt,
+        ActivityData, Channel, CreateEmbed, CreateEmbedFooter, EditMessage, GenericChannelId,
+        Message, OnlineStatus, futures::StreamExt,
     },
 };
 use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
@@ -158,7 +158,7 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
         let mut messages = GenericChannelId::new(channel_id)
             .messages_iter(ctx.http())
             .boxed();
-        
+
         let Some(status) = infer_wiki_url_status(channel_id) else {
             continue;
         };
@@ -296,7 +296,62 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+#[poise::command(context_menu_command = "Update entries", owners_only)]
+pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
+    let Some(urls) = extract_urls(&message.content) else {
+        return Ok(());
+    };
+
+    let mut status = infer_wiki_url_status(message.channel_id.get());
+
+    if status.is_none() {
+        match message.channel(ctx.http()).await {
+            Ok(Channel::GuildThread(thread)) => {
+                if !matches!(
+                    thread.parent_id.get(),
+                    FmhyChannel::ADD_LINKS
+                        | FmhyChannel::NSFW_ADD_LINKS
+                        | FmhyChannel::LINK_TESTING
+                ) {
+                    return Ok(());
+                }
+                status = Some(WikiUrlStatus::Pending);
+            }
+            _ => return Ok(()),
+        }
+    }
+
+    let status = status.unwrap();
+    let entries = WikiUrls::find()
+        .filter(wiki_urls::Column::Url.is_in(&urls))
+        .all(&ctx.data().database.pool)
+        .await?;
+
+    update_wiki_urls_with_message(entries, &message, status, &ctx.data().database.pool).await;
+
+    Ok(())
+}
+
+#[poise::command(context_menu_command = "Delete entries", owners_only)]
+pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
+    let Some(urls) = extract_urls(&message.content) else {
+        return Ok(());
+    };
+
+    let _ = WikiUrls::delete_many()
+        .filter(wiki_urls::Column::Url.is_in(urls))
+        .exec(&ctx.data().database.pool)
+        .await;
+
+    Ok(())
+}
+
 #[must_use]
-pub fn commands() -> [crate::Command; 2] {
-    [fmby(), search()]
+pub fn commands() -> [crate::Command; 4] {
+    [
+        fmby(),
+        search(),
+        update_entries_in_message(),
+        delete_entries_in_message(),
+    ]
 }
