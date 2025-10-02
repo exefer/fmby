@@ -34,7 +34,7 @@ impl BackgroundTask for StaleRemover {
             .filter(wiki_urls::Column::Status.eq(WikiUrlStatus::Pending))
             .filter(
                 Expr::col(wiki_urls::Column::CreatedAt)
-                    .lt(Expr::current_timestamp().sub(Expr::cust("INTERVAL '14 days'"))),
+                    .lt(Expr::current_timestamp().sub(Expr::cust("INTERVAL '1 day'"))),
             )
             .order_by_asc(wiki_urls::Column::CreatedAt)
             .all(&self.ctx.data_ref::<Data>().database.pool)
