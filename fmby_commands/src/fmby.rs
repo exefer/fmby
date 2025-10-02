@@ -1,7 +1,10 @@
 use crate::{Context, Error};
 use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
-    utils::{db::ChunkSize, url::extract_urls},
+    utils::{
+        db::{ChunkSize, infer_wiki_url_status, update_wiki_urls_with_message},
+        url::extract_urls,
+    },
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
@@ -153,15 +156,11 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
 
     for (i, &channel_id) in channel_ids.iter().enumerate() {
         let mut messages = GenericChannelId::new(channel_id)
-            .messages_iter(&ctx)
+            .messages_iter(ctx.http())
             .boxed();
-        let status = match channel_id {
-            FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS => WikiUrlStatus::Pending,
-            FmhyChannel::RECENTLY_ADDED | FmhyChannel::NSFW_RECENTLY_ADDED => WikiUrlStatus::Added,
-            FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
-                WikiUrlStatus::Removed
-            }
-            _ => continue,
+        
+        let Some(status) = infer_wiki_url_status(channel_id) else {
+            continue;
         };
 
         while let Some(Ok(message)) = messages.next().await {

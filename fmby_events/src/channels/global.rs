@@ -1,15 +1,18 @@
-use fmby_core::constants::{AUTO_THREAD_MAPPINGS, FmhyChannel};
 use fmby_core::{
+    constants::{AUTO_THREAD_MAPPINGS, FmhyChannel},
     structs::Data,
-    utils::{db::WikiUrlFinder, formatters::UrlFormatter, url::extract_urls},
+    utils::{
+        db::{get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message},
+        formatters::UrlFormatter,
+        url::extract_urls,
+    },
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::{
     Channel, Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
     MessageReference, prelude::*,
 };
-use sea_orm::sqlx::types::chrono::Utc;
-use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*};
+use sea_orm::{ActiveValue::*, Iterable, prelude::*};
 
 pub async fn on_message(ctx: &Context, message: &Message) {
     for (channel_id, needle) in AUTO_THREAD_MAPPINGS.iter() {
@@ -38,33 +41,19 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         return;
     };
 
-    let status = match message.channel_id.get() {
-        FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS => Some(WikiUrlStatus::Pending),
-        FmhyChannel::RECENTLY_ADDED | FmhyChannel::NSFW_RECENTLY_ADDED => {
-            Some(WikiUrlStatus::Added)
-        }
-        FmhyChannel::DEAD_SITES | FmhyChannel::REMOVE_SITES | FmhyChannel::NSFW_REMOVED => {
-            Some(WikiUrlStatus::Removed)
-        }
-        _ => None,
-    };
+    let status = infer_wiki_url_status(message.channel_id.get());
 
-    if let Ok(entries) = urls
-        .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
-        .await
-    {
+    if let Some(entries) = get_wiki_urls_by_urls(&urls, &ctx.data::<Data>().database.pool).await {
         if !entries.is_empty() {
             match status {
                 Some(WikiUrlStatus::Added) | Some(WikiUrlStatus::Removed) => {
-                    for mut entry in entries.into_iter().map(IntoActiveModel::into_active_model) {
-                        entry.user_id = Set(Some(message.author.id.get() as i64));
-                        entry.message_id = Set(Some(message.id.get() as i64));
-                        entry.channel_id = Set(Some(message.channel_id.get() as i64));
-                        entry.updated_at = Set(Utc::now().into());
-                        entry.status = Set(status.unwrap());
-
-                        let _ = entry.update(&ctx.data::<Data>().database.pool).await;
-                    }
+                    update_wiki_urls_with_message(
+                        entries,
+                        message,
+                        status.unwrap(),
+                        &ctx.data::<Data>().database.pool,
+                    )
+                    .await;
                 }
                 Some(WikiUrlStatus::Pending) | None => {
                     if status.is_none() {

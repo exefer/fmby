@@ -1,11 +1,13 @@
 use fmby_core::{
     constants::{FmhyChannel, link_testing::ForumTag},
     structs::Data,
-    utils::{db::WikiUrlFinder, url::extract_urls},
+    utils::{
+        db::{get_wiki_urls_by_urls, update_wiki_urls_with_message},
+        url::extract_urls,
+    },
 };
 use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use poise::serenity_prelude::{CreateMessage, GetMessages, GuildThread, prelude::*};
-use sea_orm::{ActiveValue::*, IntoActiveModel, prelude::*, sqlx::types::chrono::Utc};
 use std::collections::HashSet;
 
 pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_created: &Option<bool>) {
@@ -21,19 +23,15 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_create
         .ok()
         .and_then(|m| m.into_iter().next())
         && let Some(urls) = extract_urls(&message.content)
-        && let Ok(entries) = urls
-            .find_wiki_url_entries(&ctx.data::<Data>().database.pool)
-            .await
+        && let Some(entries) = get_wiki_urls_by_urls(&urls, &ctx.data::<Data>().database.pool).await
     {
-        for mut entry in entries.into_iter().map(IntoActiveModel::into_active_model) {
-            entry.user_id = Set(Some(message.author.id.get() as i64));
-            entry.message_id = Set(Some(message.id.get() as i64));
-            entry.channel_id = Set(Some(thread.id.get() as i64));
-            entry.updated_at = Set(Utc::now().into());
-            entry.status = Set(WikiUrlStatus::Pending);
-
-            let _ = entry.update(&ctx.data::<Data>().database.pool).await;
-        }
+        update_wiki_urls_with_message(
+            entries,
+            &message,
+            WikiUrlStatus::Pending,
+            &ctx.data::<Data>().database.pool,
+        )
+        .await;
     }
 }
 
