@@ -1,5 +1,5 @@
 use fmby_core::{
-    constants::{AUTO_THREAD_MAPPINGS, FmhyChannel},
+    constants::{AUTO_THREAD_MAPPINGS, FmhyChannel, FmhyServerRole},
     structs::Data,
     utils::{
         db::{get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message},
@@ -9,8 +9,9 @@ use fmby_core::{
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::{
-    Channel, Color, CreateAllowedMentions, CreateEmbed, CreateMessage, CreateThread, Message,
-    MessageReference, prelude::*,
+    Channel, Color, CreateAllowedMentions, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
+    CreateMessage, CreateThread, Message, MessageReference, Reaction, ReactionType, Timestamp,
+    prelude::*, small_fixed_array::FixedString,
 };
 use sea_orm::{ActiveValue::*, Iterable, prelude::*};
 
@@ -85,7 +86,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         }
                     }
 
-                    let _ = message
+                    if let Ok(m) = message
                         .channel_id
                         .send_message(
                             &ctx.http,
@@ -94,7 +95,15 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                                 .reference_message(MessageReference::from(message))
                                 .allowed_mentions(CreateAllowedMentions::new().replied_user(true)),
                         )
-                        .await;
+                        .await
+                    {
+                        let _ = m
+                            .react(
+                                &ctx.http,
+                                ReactionType::Unicode(FixedString::from_str_trunc("❌")),
+                            )
+                            .await;
+                    };
                 }
             }
         } else if let Some(status) = status {
@@ -113,6 +122,89 @@ pub async fn on_message(ctx: &Context, message: &Message) {
             )
             .exec(&ctx.data::<Data>().database.pool)
             .await;
+        }
+    }
+}
+
+pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
+    let (Ok(user), Ok(message)) = (
+        reaction.user(&ctx.http).await,
+        reaction.message(&ctx.http).await,
+    ) else {
+        return;
+    };
+
+    if reaction.emoji.unicode_eq("🔖")
+        && let Some(guild_id) = reaction.guild_id
+        && let Ok(m) = user
+            .id
+            .direct_message(
+                &ctx.http,
+                CreateMessage::new().embed(
+                    CreateEmbed::new()
+                        .author(
+                            CreateEmbedAuthor::new(&message.author.name).icon_url(
+                                message
+                                    .author
+                                    .avatar_url()
+                                    .unwrap_or_else(|| message.author.default_avatar_url()),
+                            ),
+                        )
+                        .description(&message.content)
+                        .field(
+                            "Jump",
+                            format!("[Go to Message!]({})", message.link()),
+                            false,
+                        )
+                        .footer(CreateEmbedFooter::new(format!(
+                            "Guild: {} | Channel: #{}",
+                            guild_id
+                                .name(&ctx.cache)
+                                .unwrap_or_else(|| "None".to_string()),
+                            message
+                                .guild_channel(&ctx.http)
+                                .await
+                                .map(|c| c.base.name.into_string())
+                                .unwrap_or_else(|_| "None".to_string())
+                        )))
+                        .timestamp(Timestamp::now()),
+                ),
+            )
+            .await
+    {
+        let _ = m
+            .react(
+                &ctx.http,
+                ReactionType::Unicode(FixedString::from_str_trunc("❌")),
+            )
+            .await;
+    }
+
+    if reaction.emoji.unicode_eq("❌") && message.author.bot() && reaction.guild_id.is_none() {
+        let _ = message.delete(&ctx.http, None).await;
+    }
+
+    if reaction.emoji.unicode_eq("❌")
+        && !user.bot()
+        && message.author.bot()
+        && let Some(member) = reaction.member.as_ref()
+        && message.reactions.iter().any(|m| {
+            m.me && m.reaction_type == ReactionType::Unicode(FixedString::from_str_trunc("❌"))
+        })
+        && (user == message.author
+            || member.roles.iter().any(|r| {
+                matches!(
+                    r.get(),
+                    FmhyServerRole::FIRST_MATE
+                        | FmhyServerRole::CELESTIAL
+                        | FmhyServerRole::CAPTAIN
+                )
+            }))
+    {
+        let _ = message.delete(&ctx.http, None).await;
+
+        if let Some(m) = message.referenced_message {
+            let _ = m.delete(&ctx.http, None).await;
         }
     }
 }

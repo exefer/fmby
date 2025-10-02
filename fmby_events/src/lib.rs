@@ -3,7 +3,6 @@ use fmby_core::{
     tasks::stale_remover::StaleRemover,
 };
 use poise::serenity_prelude::{self as serenity, FullEvent};
-mod bookmark;
 mod channels;
 
 pub struct Handler;
@@ -39,7 +38,7 @@ pub async fn event_handler(ctx: &serenity::Context, event: &FullEvent) -> Result
             channels::global::on_message(ctx, new_message).await;
         }
         FullEvent::ReactionAdd { add_reaction, .. } => {
-            bookmark::on_reaction_add(ctx, add_reaction).await;
+            channels::global::on_reaction_add(ctx, add_reaction).await;
         }
         FullEvent::ThreadCreate {
             thread,
