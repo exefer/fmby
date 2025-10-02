@@ -20,7 +20,7 @@ pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
 
 /// Executes a SQL query, optionally pretty-prints results, and replies or returns an error
 #[poise::command(prefix_command, owners_only)]
-pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> Result<(), Error> {
+pub async fn sql_query(ctx: Context<'_>, sql: String, #[flag] pretty: bool) -> Result<(), Error> {
     match ctx
         .data()
         .database
@@ -34,7 +34,7 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, pretty: Option<bool>) -> R
         Ok(result) => {
             let rows: Vec<_> = result.iter().filter_map(|q| q.try_as_pg_row()).collect();
 
-            let formatted = if pretty.unwrap_or(false) {
+            let formatted = if pretty {
                 format!("{:#?}", rows)
             } else {
                 format!("{:?}", rows)
