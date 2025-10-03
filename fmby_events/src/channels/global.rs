@@ -65,7 +65,8 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                                     FmhyChannel::ADD_LINKS
                                         | FmhyChannel::NSFW_ADD_LINKS
                                         | FmhyChannel::LINK_TESTING
-                                ) {
+                                ) || thread.total_message_sent == 0
+                                {
                                     return;
                                 }
                             }
