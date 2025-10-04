@@ -16,16 +16,6 @@ use poise::serenity_prelude::{
 use sea_orm::{ActiveValue::*, Iterable, prelude::*};
 
 pub async fn on_message(ctx: &Context, message: &Message) {
-    let message = if message.content.is_empty() {
-        if let Some(referenced) = &message.referenced_message {
-            referenced
-        } else {
-            return;
-        }
-    } else {
-        message
-    };
-
     for (channel_id, needle) in AUTO_THREAD_MAPPINGS.iter() {
         if message.channel_id.get() == *channel_id
             && needle.is_none_or(|n| message.content.contains(n))
@@ -47,6 +37,16 @@ pub async fn on_message(ctx: &Context, message: &Message) {
     if message.author.bot() {
         return;
     }
+
+    let message = if message.content.is_empty() {
+        if let Some(referenced) = &message.referenced_message {
+            referenced
+        } else {
+            return;
+        }
+    } else {
+        message
+    };
 
     let Some(urls) = extract_urls(&message.content) else {
         return;
