@@ -172,6 +172,16 @@ pub async fn migrate(
             };
 
             while let Some(Ok(message)) = messages.next().await {
+                let message = if message.content.is_empty() {
+                    if let Some(referenced) = message.referenced_message {
+                        *referenced
+                    } else {
+                        continue;
+                    }
+                } else {
+                    message
+                };
+
                 if message.author.bot() {
                     continue;
                 }
