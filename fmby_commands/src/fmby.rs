@@ -3,7 +3,8 @@ use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
     utils::{
         db::{ChunkSize, infer_wiki_url_status, update_wiki_urls_with_message},
-        url::extract_urls,
+        url::{clean_url, extract_urls},
+        wiki::collect_wiki_urls,
     },
 };
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
@@ -14,7 +15,9 @@ use poise::{
         Message, OnlineStatus, futures::StreamExt,
     },
 };
-use sea_orm::{ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict};
+use sea_orm::{
+    ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict, sqlx::types::chrono::Utc,
+};
 use std::collections::HashMap;
 
 #[poise::command(
@@ -132,7 +135,11 @@ pub async fn search(
 // by extracting URLs, determining their status (pending, added, removed),
 // and storing them with associated metadata.
 #[poise::command(slash_command, owners_only)]
-pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn migrate(
+    ctx: Context<'_>,
+    #[description = "Whether to only process wiki links without scanning message history"]
+    only_wiki: bool,
+) -> Result<(), Error> {
     let start = std::time::Instant::now();
     let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
         .await?
@@ -154,121 +161,143 @@ pub async fn migrate(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("Starting migration...").await?;
     let mut reply = ctx.channel_id().say(ctx.http(), "Processing...").await?;
 
-    for (i, &channel_id) in channel_ids.iter().enumerate() {
-        let mut messages = GenericChannelId::new(channel_id)
-            .messages_iter(ctx.http())
-            .boxed();
+    if !only_wiki {
+        for (i, &channel_id) in channel_ids.iter().enumerate() {
+            let mut messages = GenericChannelId::new(channel_id)
+                .messages_iter(ctx.http())
+                .boxed();
 
-        let Some(status) = infer_wiki_url_status(channel_id) else {
-            continue;
-        };
-
-        while let Some(Ok(message)) = messages.next().await {
-            if message.author.bot() {
-                continue;
-            }
-
-            messages_processed += 1;
-
-            let Some(urls) = extract_urls(&message.content) else {
-                messages_skipped += 1;
+            let Some(status) = infer_wiki_url_status(channel_id) else {
                 continue;
             };
 
-            let urls = match status {
-                WikiUrlStatus::Pending => urls,
-                WikiUrlStatus::Added => {
-                    let urls_in_wiki = urls
-                        .into_iter()
-                        .filter(|url| content.contains(url))
-                        .collect::<Vec<_>>();
-
-                    if urls_in_wiki.is_empty() {
-                        continue;
-                    }
-
-                    urls_in_wiki
+            while let Some(Ok(message)) = messages.next().await {
+                if message.author.bot() {
+                    continue;
                 }
-                WikiUrlStatus::Removed => {
-                    let urls_not_in_wiki = urls
-                        .into_iter()
-                        .filter(|url| !content.contains(url))
-                        .collect::<Vec<_>>();
 
-                    if urls_not_in_wiki.is_empty() {
-                        continue;
+                messages_processed += 1;
+
+                let Some(urls) = extract_urls(&message.content) else {
+                    messages_skipped += 1;
+                    continue;
+                };
+
+                let urls = match status {
+                    WikiUrlStatus::Pending => urls,
+                    WikiUrlStatus::Added => {
+                        let urls_in_wiki = urls
+                            .into_iter()
+                            .filter(|url| content.contains(url))
+                            .collect::<Vec<_>>();
+
+                        if urls_in_wiki.is_empty() {
+                            continue;
+                        }
+
+                        urls_in_wiki
                     }
+                    WikiUrlStatus::Removed => {
+                        let urls_not_in_wiki = urls
+                            .into_iter()
+                            .filter(|url| !content.contains(url))
+                            .collect::<Vec<_>>();
 
-                    urls_not_in_wiki
+                        if urls_not_in_wiki.is_empty() {
+                            continue;
+                        }
+
+                        urls_not_in_wiki
+                    }
+                };
+
+                urls_processed += urls.len() as u32;
+
+                for url in urls {
+                    entries
+                        .entry(url.clone())
+                        .or_insert_with(|| wiki_urls::ActiveModel {
+                            url: Set(url),
+                            user_id: Set(Some(message.author.id.get() as i64)),
+                            message_id: Set(Some(message.id.get() as i64)),
+                            channel_id: Set(Some(message.channel_id.get() as i64)),
+                            guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
+                            created_at: Set(message.timestamp.fixed_offset()),
+                            updated_at: Set(message.timestamp.fixed_offset()),
+                            status: Set(status),
+                            ..Default::default()
+                        });
                 }
+            }
+
+            let next_channel_id = channel_ids.get(i + 1);
+            let process_rate = if messages_processed > 0 {
+                100.0 * (messages_processed - messages_skipped) as f64 / messages_processed as f64
+            } else {
+                0.0
             };
 
-            urls_processed += urls.len() as u32;
-
-            for url in urls {
-                entries
-                    .entry(url.clone())
-                    .or_insert_with(|| wiki_urls::ActiveModel {
-                        url: Set(url),
-                        user_id: Set(Some(message.author.id.get() as i64)),
-                        message_id: Set(Some(message.id.get() as i64)),
-                        channel_id: Set(Some(message.channel_id.get() as i64)),
-                        guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
-                        created_at: Set(message.timestamp.fixed_offset()),
-                        updated_at: Set(message.timestamp.fixed_offset()),
-                        status: Set(status),
-                        ..Default::default()
-                    });
-            }
-        }
-
-        let next_channel_id = channel_ids.get(i + 1);
-        let process_rate = if messages_processed > 0 {
-            100.0 * (messages_processed - messages_skipped) as f64 / messages_processed as f64
-        } else {
-            0.0
-        };
-
-        reply
-            .edit(
-                ctx.http(),
-                EditMessage::new().embed(
-                    CreateEmbed::new()
-                        .title("Migration Progress")
-                        .fields([
-                            (
-                                "Messages",
-                                format!(
-                                    "Processed: {}\nSkipped: {}\nProcess rate: {:.1}% ({})",
-                                    messages_processed,
-                                    messages_skipped,
-                                    process_rate,
-                                    messages_processed + messages_skipped
+            reply
+                .edit(
+                    ctx.http(),
+                    EditMessage::new().embed(
+                        CreateEmbed::new()
+                            .title("Migration Progress")
+                            .fields([
+                                (
+                                    "Messages",
+                                    format!(
+                                        "Processed: {}\nSkipped: {}\nProcess rate: {:.1}% ({})",
+                                        messages_processed,
+                                        messages_skipped,
+                                        process_rate,
+                                        messages_processed + messages_skipped
+                                    ),
+                                    false,
                                 ),
-                                false,
-                            ),
-                            ("URLs processed", urls_processed.to_string(), false),
-                            ("Current channel", format!("<#{}>", channel_id), false),
-                            (
-                                "Next channel",
-                                next_channel_id
-                                    .map(|id| format!("<#{}>", id))
-                                    .unwrap_or_else(|| "None".to_string()),
-                                false,
-                            ),
-                            ("Time elapsed", format!("{:.2?}", start.elapsed()), false),
-                        ])
-                        .footer(CreateEmbedFooter::new(
-                            "Progress is updated after each channel",
-                        )),
-                ),
-            )
-            .await?;
+                                ("URLs processed", urls_processed.to_string(), false),
+                                ("Current channel", format!("<#{}>", channel_id), false),
+                                (
+                                    "Next channel",
+                                    next_channel_id
+                                        .map(|id| format!("<#{}>", id))
+                                        .unwrap_or_else(|| "None".to_string()),
+                                    false,
+                                ),
+                                ("Time elapsed", format!("{:.2?}", start.elapsed()), false),
+                            ])
+                            .footer(CreateEmbedFooter::new(
+                                "Progress is updated after each channel",
+                            )),
+                    ),
+                )
+                .await?;
+        }
     }
 
-    reply
-        .edit(ctx.http(), EditMessage::new().content(""))
-        .await?;
+    let urls = collect_wiki_urls(&content)
+        .iter()
+        .map(|url| clean_url(url).to_string())
+        .collect::<Vec<_>>();
+
+    for url in urls {
+        entries
+            .entry(url.clone())
+            .or_insert_with(|| wiki_urls::ActiveModel {
+                url: Set(url),
+                guild_id: Set(ctx.guild_id().map(|g| g.get() as i64)),
+                created_at: Set(Utc::now().into()),
+                updated_at: Set(Utc::now().into()),
+                status: Set(WikiUrlStatus::Added),
+                ..Default::default()
+            });
+    }
+
+    if !only_wiki {
+        reply
+            .edit(ctx.http(), EditMessage::new().content(""))
+            .await?;
+    }
 
     let mut entries: Vec<_> = entries.into_values().collect();
     let chunk_size = WikiUrls::chunk_size();
