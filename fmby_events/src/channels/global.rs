@@ -191,7 +191,11 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
             .await;
     }
 
-    if reaction.emoji.unicode_eq("❌") && message.author.bot() && reaction.guild_id.is_none() {
+    if reaction.emoji.unicode_eq("❌")
+        && !user.bot()
+        && message.author.bot()
+        && reaction.guild_id.is_none()
+    {
         let _ = message.delete(&ctx.http, None).await;
     }
 
