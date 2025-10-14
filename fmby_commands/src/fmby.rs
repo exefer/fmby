@@ -3,6 +3,7 @@ use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
     utils::{
         db::{ChunkSize, infer_wiki_url_status, update_wiki_urls_with_message},
+        message::get_content_or_referenced,
         url::{clean_url, extract_urls},
         wiki::collect_wiki_urls,
     },
@@ -172,23 +173,17 @@ pub async fn migrate(
             };
 
             while let Some(Ok(message)) = messages.next().await {
-                let message = if message.content.is_empty() {
-                    if let Some(referenced) = message.referenced_message {
-                        *referenced
-                    } else {
-                        continue;
-                    }
-                } else {
-                    message
-                };
-
                 if message.author.bot() {
                     continue;
                 }
 
                 messages_processed += 1;
 
-                let Some(urls) = extract_urls(&message.content) else {
+                let Some(m_content) = get_content_or_referenced(&message) else {
+                    continue;
+                };
+
+                let Some(urls) = extract_urls(m_content) else {
                     messages_skipped += 1;
                     continue;
                 };
@@ -337,7 +332,11 @@ pub async fn migrate(
 
 #[poise::command(context_menu_command = "Update entries", owners_only)]
 pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
-    let Some(urls) = extract_urls(&message.content) else {
+    let Some(m_content) = get_content_or_referenced(&message) else {
+        return Ok(());
+    };
+
+    let Some(urls) = extract_urls(m_content) else {
         return Ok(());
     };
 
@@ -373,7 +372,11 @@ pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Re
 
 #[poise::command(context_menu_command = "Delete entries", owners_only)]
 pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
-    let Some(urls) = extract_urls(&message.content) else {
+    let Some(m_content) = get_content_or_referenced(&message) else {
+        return Ok(());
+    };
+
+    let Some(urls) = extract_urls(m_content) else {
         return Ok(());
     };
 

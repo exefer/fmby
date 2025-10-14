@@ -4,6 +4,7 @@ use fmby_core::{
     utils::{
         db::{get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message},
         formatters::UrlFormatter,
+        message::get_content_or_referenced,
         url::extract_urls,
     },
 };
@@ -38,17 +39,11 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         return;
     }
 
-    let message = if message.content.is_empty() {
-        if let Some(referenced) = &message.referenced_message {
-            referenced
-        } else {
-            return;
-        }
-    } else {
-        message
+    let Some(m_content) = get_content_or_referenced(message) else {
+        return;
     };
 
-    let Some(urls) = extract_urls(&message.content) else {
+    let Some(urls) = extract_urls(m_content) else {
         return;
     };
 
