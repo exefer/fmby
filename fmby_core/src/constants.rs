@@ -28,6 +28,7 @@ impl FmhyChannel {
     pub const NSFW_RECENTLY_ADDED: u64 = 1199379440292085901;
     pub const FREE_STUFF: u64 = 976770662205104150;
     pub const SECRET_RESOURCES: u64 = 1089999083856470016;
+    pub const FEEDBACK: u64 = 1170269918130868304;
 }
 
 pub struct FmhyServerRole;

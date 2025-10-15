@@ -35,11 +35,18 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         }
     }
 
-    if message.author.bot() {
+    if message.author.bot() && message.webhook_id.is_none() {
         return;
     }
 
-    let Some(m_content) = get_content_or_referenced(message) else {
+    let Some(m_content) = get_content_or_referenced(message).or_else(|| {
+        message
+            .embeds
+            .first()
+            .and_then(|e| e.fields.get(2))
+            .filter(|f| f.name == "Message")
+            .map(|f| f.value.as_str())
+    }) else {
         return;
     };
 
@@ -62,21 +69,21 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                     .await;
                 }
                 Some(WikiUrlStatus::Pending) | None => {
-                    if status.is_none() {
-                        match message.channel(&ctx.http).await {
-                            Ok(Channel::GuildThread(thread)) => {
-                                if !matches!(
+                    let should_proceed = status.is_some()
+                        || message.channel_id.get() == FmhyChannel::FEEDBACK
+                        || matches!(
+                            message.channel(&ctx.http).await,
+                            Ok(Channel::GuildThread(thread))
+                                if matches!(
                                     thread.parent_id.get(),
                                     FmhyChannel::ADD_LINKS
                                         | FmhyChannel::NSFW_ADD_LINKS
                                         | FmhyChannel::LINK_TESTING
-                                ) || thread.total_message_sent == 0
-                                {
-                                    return;
-                                }
-                            }
-                            _ => return,
-                        }
+                                ) && thread.total_message_sent > 0
+                        );
+
+                    if !should_proceed {
+                        return;
                     }
 
                     let mut embed = CreateEmbed::new().title("Warning").color(Color::ORANGE);
@@ -102,6 +109,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                                 .allowed_mentions(CreateAllowedMentions::new().replied_user(true)),
                         )
                         .await
+                        && message.channel_id.get() != FmhyChannel::FEEDBACK
                     {
                         let _ = m
                             .react(
