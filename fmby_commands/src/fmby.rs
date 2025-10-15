@@ -97,41 +97,6 @@ pub async fn activity(
     Ok(())
 }
 
-/// Search for query in the wiki
-#[poise::command(slash_command)]
-pub async fn search(
-    ctx: Context<'_>,
-    #[description = "The term or phrase you want to search for in the wiki"] query: String,
-    #[min = 1]
-    #[max = 25]
-    #[description = "The maximum number of search results to return (default is 10)"]
-    limit: Option<u8>,
-) -> Result<(), Error> {
-    let result: String = fmby_core::utils::wiki::search_in_wiki(&query)
-        .await
-        .unwrap()
-        .into_iter()
-        .take(limit.unwrap_or(10) as usize)
-        .map(|s| format!("- {}", s))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    ctx.send(
-        CreateReply::new().embed(
-            CreateEmbed::new()
-                .title(format!("Search results for \"{}\"", query))
-                .description(if result.is_empty() {
-                    "Nothing found."
-                } else {
-                    &result
-                }),
-        ),
-    )
-    .await?;
-
-    Ok(())
-}
-
 /// Migrate existing messages from designated channels into the wiki database
 // by extracting URLs, determining their status (pending, added, removed),
 // and storing them with associated metadata.
@@ -330,6 +295,42 @@ pub async fn migrate(
     Ok(())
 }
 
+/// Search for query in the wiki
+#[poise::command(slash_command)]
+pub async fn search(
+    ctx: Context<'_>,
+    #[description = "The term or phrase you want to search for in the wiki"] query: String,
+    #[min = 1]
+    #[max = 25]
+    #[description = "The maximum number of search results to return (default is 10)"]
+    limit: Option<u8>,
+) -> Result<(), Error> {
+    let result: String = fmby_core::utils::wiki::search_in_wiki(&query)
+        .await
+        .unwrap()
+        .into_iter()
+        .take(limit.unwrap_or(10) as usize)
+        .map(|s| format!("- {}", s))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    ctx.send(
+        CreateReply::new().embed(
+            CreateEmbed::new()
+                .title(format!("Search results for \"{}\"", query))
+                .description(if result.is_empty() {
+                    "Nothing found."
+                } else {
+                    &result
+                }),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+// TODO: Refactor
 #[poise::command(context_menu_command = "Update entries", owners_only)]
 pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let Some(m_content) = get_content_or_referenced(&message) else {
@@ -370,6 +371,7 @@ pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Re
     Ok(())
 }
 
+// TODO: Refactor
 #[poise::command(context_menu_command = "Delete entries", owners_only)]
 pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let Some(m_content) = get_content_or_referenced(&message) else {
