@@ -43,8 +43,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         message
             .embeds
             .first()
-            .and_then(|e| e.fields.get(2))
-            .filter(|f| f.name == "Message")
+            .and_then(|e| e.fields.iter().find(|f| f.name == "Message"))
             .map(|f| f.value.as_str())
     }) else {
         return;
