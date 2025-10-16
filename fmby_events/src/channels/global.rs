@@ -11,8 +11,7 @@ use fmby_core::{
 use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::serenity_prelude::{
     Channel, Color, CreateAllowedMentions, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
-    CreateMessage, CreateThread, Message, MessageReference, Reaction, ReactionType, Timestamp,
-    prelude::*, small_fixed_array::FixedString,
+    CreateMessage, CreateThread, Message, MessageReference, Reaction, Timestamp, prelude::*,
 };
 use sea_orm::{ActiveValue::*, Iterable, prelude::*};
 
@@ -110,12 +109,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         .await
                         && message.channel_id.get() != FmhyChannel::FEEDBACK
                     {
-                        let _ = m
-                            .react(
-                                &ctx.http,
-                                ReactionType::Unicode(FixedString::from_str_trunc("❌")),
-                            )
-                            .await;
+                        let _ = m.react(&ctx.http, '❌').await;
                     };
                 }
             }
@@ -190,29 +184,21 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
             )
             .await
     {
-        let _ = m
-            .react(
-                &ctx.http,
-                ReactionType::Unicode(FixedString::from_str_trunc("❌")),
-            )
-            .await;
+        let _ = m.react(&ctx.http, '❌').await;
     }
 
-    if reaction.emoji.unicode_eq("❌")
-        && !user.bot()
-        && message.author.bot()
-        && reaction.guild_id.is_none()
-    {
+    let is_delete = reaction.emoji.unicode_eq("❌") && !user.bot() && message.author.bot();
+
+    if is_delete && reaction.guild_id.is_none() {
         let _ = message.delete(&ctx.http, None).await;
     }
 
-    if reaction.emoji.unicode_eq("❌")
-        && !user.bot()
-        && message.author.bot()
+    if is_delete
         && let Some(member) = reaction.member.as_ref()
-        && message.reactions.iter().any(|m| {
-            m.me && m.reaction_type == ReactionType::Unicode(FixedString::from_str_trunc("❌"))
-        })
+        && message
+            .reactions
+            .iter()
+            .any(|m| m.me && m.reaction_type == '❌'.into())
         && (member.roles.iter().any(|r| {
             matches!(
                 r.get(),
@@ -221,7 +207,7 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
         }) || message
             .referenced_message
             .as_ref()
-            .is_some_and(|m| user.id == m.author.id))
+            .is_some_and(|m| m.author.id == user.id))
     {
         let _ = message.delete(&ctx.http, None).await;
 
