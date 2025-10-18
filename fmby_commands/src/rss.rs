@@ -171,9 +171,9 @@ pub async fn list(
         .await?;
 
     let content = if feeds.is_empty() {
-        "There are no RSS feed subscriptions in this channel.".to_owned()
+        "There are no RSS feed subscriptions in this channel."
     } else {
-        feeds
+        &feeds
             .into_iter()
             .map(|feed| {
                 format!(
