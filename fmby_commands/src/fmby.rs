@@ -19,7 +19,7 @@ use poise::{
 };
 use sea_orm::{
     ActiveValue::*,
-    QuerySelect, QueryTrait, TransactionTrait,
+    QueryOrder, QuerySelect, QueryTrait, TransactionTrait,
     prelude::*,
     sea_query::{OnConflict, extension::postgres::PgExpr},
     sqlx::types::chrono::Utc,
@@ -347,6 +347,7 @@ async fn autocomplete_url<'a>(
             query.filter(Expr::col(wiki_urls::Column::Url).ilike(format!("%{}%", partial)))
         })
         .limit(25)
+        .order_by_asc(wiki_urls::Column::Url)
         .into_tuple()
         .all(&ctx.data().database.pool)
         .await
