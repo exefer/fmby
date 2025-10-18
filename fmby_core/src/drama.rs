@@ -41,7 +41,7 @@ pub fn fill_phrase(phrase: &str, data: &DramaConfig, rng: &mut impl Rng) -> Stri
                         None
                     }
                 })
-                .unwrap_or_else(|| word.to_string())
+                .unwrap_or_else(|| word.to_owned())
         })
         .collect::<Vec<_>>()
         .join(" ")

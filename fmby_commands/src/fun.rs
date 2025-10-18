@@ -32,7 +32,7 @@ fn tokenize(text: &str) -> Vec<(Token, f32)> {
     let mut counts: HashMap<String, usize> = HashMap::new();
 
     for token in TOKEN_RE.find_iter(text) {
-        *counts.entry(token.as_str().to_string()).or_default() += 1;
+        *counts.entry(token.as_str().to_owned()).or_default() += 1;
     }
 
     counts

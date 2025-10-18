@@ -16,7 +16,7 @@ static URL_RE: LazyLock<Regex> = LazyLock::new(|| {
 pub fn extract_urls(haystack: &str) -> Option<Vec<String>> {
     let matches: Vec<String> = URL_RE
         .find_iter(haystack)
-        .map(|m| clean_url(m.as_str()).to_string())
+        .map(|m| clean_url(m.as_str()).to_owned())
         .filter(|s| !s.starts_with("discord.com/channels") && !s.starts_with("fmhy.net"))
         .collect();
 

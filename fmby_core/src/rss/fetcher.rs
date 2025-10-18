@@ -45,8 +45,7 @@ impl RssFetcher {
             parsed_feed
                 .title
                 .as_ref()
-                .map(|t| t.content.as_str())
-                .unwrap_or("Unnamed feed"),
+                .map_or("Unnamed feed", |t| t.content.as_str()),
             parsed_feed.entries.len()
         );
 
@@ -76,11 +75,8 @@ impl RssFetcher {
         let entry_id = if !entry.id.is_empty() {
             entry.id
         } else {
-            entry
-                .links
-                .first()
-                .map(|link| link.href.clone())
-                .unwrap_or_else(|| {
+            entry.links.first().map_or_else(
+                || {
                     let timestamp = entry
                         .published
                         .or(entry.updated)
@@ -89,15 +85,16 @@ impl RssFetcher {
                     let title = entry
                         .title
                         .as_ref()
-                        .map(|t| t.content.as_str())
-                        .unwrap_or("untitled");
+                        .map_or("untitled", |t| t.content.as_str());
                     format!("{}_{}", title, timestamp)
-                })
+                },
+                |link| link.href.clone(),
+            )
         };
 
         let title = entry
             .title
-            .map_or_else(|| "Untitled".to_string(), |t| t.content);
+            .map_or_else(|| "Untitled".to_owned(), |t| t.content);
 
         let link = entry.links.first().map(|l| l.href.clone());
 
@@ -122,15 +119,14 @@ impl RssFetcher {
                     .first()
                     .map(|m| m.image.uri.clone())
                     .or_else(|| {
-                        m.content.first().and_then(|m| {
-                            if let (Some(url), Some(content_type)) = (&m.url, &m.content_type)
-                                && content_type.ty() == "image"
-                            {
-                                Some(url.to_string())
-                            } else {
-                                None
-                            }
-                        })
+                        let m = m.content.first()?;
+                        if let (Some(url), Some(content_type)) = (&m.url, &m.content_type)
+                            && content_type.ty() == "image"
+                        {
+                            Some(url.to_string())
+                        } else {
+                            None
+                        }
                     })
             })
             .or_else(|| {
@@ -140,13 +136,7 @@ impl RssFetcher {
                     .and_then(|s| find_first_image(&s.content))
                     .filter(|url| !url.is_empty())
             })
-            .or_else(|| {
-                entry
-                    .content
-                    .as_ref()
-                    .and_then(|c| c.body.as_ref())
-                    .and_then(|b| find_first_image(b))
-            });
+            .or_else(|| find_first_image(entry.content.as_ref().and_then(|c| c.body.as_ref())?));
 
         rss_feed_entries::ActiveModel {
             id: Set(Uuid::new_v4()),
@@ -182,7 +172,7 @@ impl RssFetcher {
             .title
             .map(|t| t.content)
             .filter(|t| !t.trim().is_empty())
-            .unwrap_or_else(|| "RSS Feed".to_string()))
+            .unwrap_or_else(|| "RSS Feed".to_owned()))
     }
 }
 
@@ -197,7 +187,7 @@ fn decode_html_entities(html: &str) -> String {
             .and_then(|m| m.as_str().parse::<u32>().ok())
             .and_then(char::from_u32)
             .map_or_else(
-                || caps.get(0).unwrap().as_str().to_string(),
+                || caps.get(0).unwrap().as_str().to_owned(),
                 |ch| ch.to_string(),
             )
     });
@@ -247,7 +237,7 @@ fn find_first_image(html: &str) -> Option<String> {
     IMG_RE
         .captures(&decoded)?
         .get(1)
-        .map(|m| m.as_str().to_string())
+        .map(|m| m.as_str().to_owned())
         .filter(|url| {
             url.starts_with("http://") || url.starts_with("https://") || url.starts_with("//")
         })

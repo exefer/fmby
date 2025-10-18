@@ -22,7 +22,7 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                 let heading_text = collect_heading_text(&mut parser_iter)
                     .replace(['►', '▷'], "")
                     .trim()
-                    .to_string();
+                    .to_owned();
                 let level = level as usize;
                 if current_headings.len() >= level {
                     current_headings.truncate(level - 1);
@@ -38,8 +38,7 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                 let line_start = range.start;
                 let line_end = content[line_start..]
                     .find('\n')
-                    .map(|i| line_start + i)
-                    .unwrap_or(content.len());
+                    .map_or(content.len(), |i| line_start + i);
                 let line = &content[line_start..line_end];
 
                 if let Some(stripped) = line.strip_prefix("* ")

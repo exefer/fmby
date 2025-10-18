@@ -167,17 +167,17 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
                             "Guild: {} | Channel: #{}",
                             guild_id
                                 .name(&ctx.cache)
-                                .unwrap_or_else(|| "None".to_string()),
+                                .unwrap_or_else(|| "None".to_owned()),
                             message
                                 .channel(&ctx.http)
                                 .await
                                 .ok()
                                 .and_then(|c| match c {
-                                    Channel::Guild(c) => Some(c.base.name.to_string()),
-                                    Channel::GuildThread(c) => Some(c.base.name.to_string()),
+                                    Channel::Guild(c) => Some(c.base.name.into_string()),
+                                    Channel::GuildThread(c) => Some(c.base.name.into_string()),
                                     _ => None,
                                 })
-                                .unwrap_or_else(|| "Unknown".to_string())
+                                .unwrap_or_else(|| "Unknown".to_owned())
                         )))
                         .timestamp(Timestamp::now()),
                 ),

@@ -200,12 +200,12 @@ pub async fn migrate(
                 }
             }
 
-            let next_channel_id = channel_ids.get(i + 1);
             let process_rate = if messages_processed > 0 {
                 100.0 * (messages_processed - messages_skipped) as f64 / messages_processed as f64
             } else {
                 0.0
             };
+            let next_channel_id = channel_ids.get(i + 1);
 
             reply
                 .edit(
@@ -229,9 +229,10 @@ pub async fn migrate(
                                 ("Current channel", format!("<#{}>", channel_id), false),
                                 (
                                     "Next channel",
-                                    next_channel_id
-                                        .map(|id| format!("<#{}>", id))
-                                        .unwrap_or_else(|| "None".to_string()),
+                                    next_channel_id.map_or_else(
+                                        || "None".to_owned(),
+                                        |id| format!("<#{}>", id),
+                                    ),
                                     false,
                                 ),
                                 ("Time elapsed", format!("{:.2?}", start.elapsed()), false),
@@ -247,7 +248,7 @@ pub async fn migrate(
 
     let urls = collect_wiki_urls(&content)
         .iter()
-        .map(|url| clean_url(url).to_string())
+        .map(|url| clean_url(url).to_owned())
         .collect::<Vec<_>>();
 
     for url in urls {
@@ -300,9 +301,9 @@ pub async fn migrate(
 pub async fn search(
     ctx: Context<'_>,
     #[description = "The term or phrase you want to search for in the wiki"] query: String,
+    #[description = "The maximum number of search results to return (default is 10)"]
     #[min = 1]
     #[max = 25]
-    #[description = "The maximum number of search results to return (default is 10)"]
     limit: Option<u8>,
 ) -> Result<(), Error> {
     let result: String = fmby_core::utils::wiki::search_in_wiki(&query)

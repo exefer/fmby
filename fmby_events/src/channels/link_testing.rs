@@ -10,7 +10,7 @@ use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use poise::serenity_prelude::{CreateMessage, GetMessages, GuildThread, prelude::*};
 use std::collections::HashSet;
 
-pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_created: &Option<bool>) {
+pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_created: Option<&bool>) {
     if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
     }
@@ -35,13 +35,12 @@ pub async fn on_thread_create(ctx: &Context, thread: &GuildThread, _newly_create
     }
 }
 
-pub async fn on_thread_update(ctx: &Context, old: &Option<GuildThread>, new: &GuildThread) {
+pub async fn on_thread_update(ctx: &Context, old: Option<&GuildThread>, new: &GuildThread) {
     if new.parent_id.get() != FmhyChannel::LINK_TESTING {
         return;
     }
 
     let old_tags: HashSet<_> = old
-        .as_ref()
         .map(|o| o.applied_tags.iter().copied())
         .into_iter()
         .flatten()

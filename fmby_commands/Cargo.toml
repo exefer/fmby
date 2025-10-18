@@ -14,4 +14,4 @@ rand.workspace = true
 reqwest.workspace = true
 regex.workspace = true
 wordcloud-rs = { version = "0.1.17", default-features = false }
-image = { version = "0.25.8", features = ["png"], default-features = false }
+image = { version = "0.25.8", default-features = false, features = ["png"] }

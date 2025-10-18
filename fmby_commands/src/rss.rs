@@ -1,4 +1,5 @@
 use crate::{Context, Error};
+use fmby_core::rss::{RssConfig, RssFetcher};
 use fmby_entities::{prelude::*, rss_feeds, sea_orm_active_enums::RssFeedStatus};
 use poise::{
     CreateReply,
@@ -11,14 +12,13 @@ use sea_orm::{
 use url::Url;
 
 async fn parse_uuid_or_reply(ctx: &Context<'_>, input: &str) -> Option<Uuid> {
-    match input.parse::<u128>() {
-        Ok(u) => Some(Uuid::from_u128(u)),
-        Err(_) => {
-            let _ = ctx
-                .reply("Invalid input. Please choose from the autocompletion choices.")
-                .await;
-            None
-        }
+    if let Ok(u) = input.parse::<u128>() {
+        Some(Uuid::from_u128(u))
+    } else {
+        let _ = ctx
+            .reply("Invalid input. Please choose from the autocompletion choices.")
+            .await;
+        None
     }
 }
 
@@ -160,7 +160,7 @@ pub async fn list(
         .await?;
 
     let content = if feeds.is_empty() {
-        "There are no RSS feed subscriptions in this channel.".to_string()
+        "There are no RSS feed subscriptions in this channel.".to_owned()
     } else {
         feeds
             .into_iter()
@@ -177,7 +177,6 @@ pub async fn list(
     ctx.send(
         CreateReply::new()
             .content(content)
-            .reply(true)
             .ephemeral(ephemeral.unwrap_or(true))
             .allowed_mentions(CreateAllowedMentions::new().all_users(false)),
     )
@@ -188,7 +187,7 @@ pub async fn list(
 
 #[poise::command(prefix_command)]
 pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error> {
-    let fetcher = fmby_core::rss::RssFetcher::new(&Default::default());
+    let fetcher = RssFetcher::new(&RssConfig::default());
 
     let content = match fetcher.validate_feed_url(&url).await {
         Ok(title) => format!("The feed title is: {}", title),

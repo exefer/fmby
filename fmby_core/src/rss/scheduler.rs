@@ -47,13 +47,7 @@ impl RssScheduler {
             let sem = Arc::clone(&semaphore);
 
             let task = async move {
-                let _permit = match sem.acquire().await {
-                    Ok(p) => p,
-                    Err(_) => {
-                        tracing::error!("Semaphore closed unexpectedly for feed {}", feed.name);
-                        return Ok(());
-                    }
-                };
+                let _permit = sem.acquire().await.unwrap();
                 self.check_single_feed(feed).await
             };
 

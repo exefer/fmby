@@ -45,10 +45,10 @@ pub async fn event_handler(ctx: &serenity::Context, event: &FullEvent) -> Result
             newly_created,
             ..
         } => {
-            channels::link_testing::on_thread_create(ctx, thread, newly_created).await;
+            channels::link_testing::on_thread_create(ctx, thread, newly_created.as_ref()).await;
         }
         FullEvent::ThreadUpdate { old, new, .. } => {
-            channels::link_testing::on_thread_update(ctx, old, new).await;
+            channels::link_testing::on_thread_update(ctx, old.as_ref(), new).await;
         }
         _ => {}
     }
