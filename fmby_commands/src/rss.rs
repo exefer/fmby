@@ -26,19 +26,22 @@ async fn autocomplete_name<'a>(
     ctx: Context<'a>,
     partial: &'a str,
 ) -> CreateAutocompleteResponse<'a> {
-    let feeds = RssFeeds::find()
+    let feeds: Vec<(String, Uuid)> = RssFeeds::find()
+        .select_only()
+        .columns([rss_feeds::Column::Name, rss_feeds::Column::Id])
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
             query.filter(Expr::col(rss_feeds::Column::Name).ilike(format!("%{}%", partial)))
         })
-        .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().unwrap().get()))
+        .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().map(|g| g.get())))
         .limit(25)
+        .into_tuple()
         .all(&ctx.data().database.pool)
         .await
         .unwrap_or_default();
 
     let choices: Vec<_> = feeds
         .into_iter()
-        .map(|feed| AutocompleteChoice::new(feed.name, feed.id.as_u128().to_string()))
+        .map(|(name, id)| AutocompleteChoice::new(name, id.as_u128().to_string()))
         .collect();
 
     CreateAutocompleteResponse::new().set_choices(choices)
