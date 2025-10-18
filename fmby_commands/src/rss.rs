@@ -16,7 +16,11 @@ async fn parse_uuid_or_reply(ctx: &Context<'_>, input: &str) -> Option<Uuid> {
         Some(Uuid::from_u128(u))
     } else {
         let _ = ctx
-            .reply("Invalid input. Please choose from the autocompletion choices.")
+            .send(
+                CreateReply::new()
+                    .content("Invalid input. Please choose from the autocompletion choices.")
+                    .ephemeral(true),
+            )
             .await;
         None
     }
@@ -87,8 +91,12 @@ pub async fn add(
             .await?;
         }
         Err(_) => {
-            ctx.reply("Unable to add RSS feed;  URL is not valid!")
-                .await?;
+            ctx.send(
+                CreateReply::new()
+                    .content("Unable to add RSS feed. URL is not valid!")
+                    .ephemeral(true),
+            )
+            .await?;
         }
     }
 
