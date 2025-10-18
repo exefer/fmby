@@ -12,12 +12,17 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
     CreateReply,
     serenity_prelude::{
-        ActivityData, Channel, CreateEmbed, CreateEmbedFooter, EditMessage, GenericChannelId,
-        Message, OnlineStatus, futures::StreamExt,
+        ActivityData, AutocompleteChoice, Channel, Color, CreateAutocompleteResponse, CreateEmbed,
+        CreateEmbedFooter, EditMessage, GenericChannelId, Message, OnlineStatus,
+        futures::StreamExt,
     },
 };
 use sea_orm::{
-    ActiveValue::*, TransactionTrait, prelude::*, sea_query::OnConflict, sqlx::types::chrono::Utc,
+    ActiveValue::*,
+    QuerySelect, QueryTrait, TransactionTrait,
+    prelude::*,
+    sea_query::{OnConflict, extension::postgres::PgExpr},
+    sqlx::types::chrono::Utc,
 };
 use std::collections::HashMap;
 
@@ -331,6 +336,105 @@ pub async fn search(
     Ok(())
 }
 
+async fn autocomplete_url<'a>(
+    ctx: Context<'a>,
+    partial: &'a str,
+) -> CreateAutocompleteResponse<'a> {
+    let urls: Vec<String> = WikiUrls::find()
+        .select_only()
+        .column(wiki_urls::Column::Url)
+        .apply_if((!partial.is_empty()).then_some(()), |query, _| {
+            query.filter(Expr::col(wiki_urls::Column::Url).ilike(format!("%{}%", partial)))
+        })
+        .limit(25)
+        .into_tuple()
+        .all(&ctx.data().database.pool)
+        .await
+        .unwrap_or_default();
+
+    let choices: Vec<_> = urls.into_iter().map(AutocompleteChoice::from).collect();
+
+    CreateAutocompleteResponse::new().set_choices(choices)
+}
+
+/// Displays context information about a specific wiki URL
+#[poise::command(slash_command)]
+pub async fn context(
+    ctx: Context<'_>,
+    #[description = "The URL to retrieve context information for"]
+    #[autocomplete = "autocomplete_url"]
+    url: String,
+    #[description = "Whether the response should only be visible to you"] ephemeral: Option<bool>,
+) -> Result<(), Error> {
+    if let Some(entry) = WikiUrls::find()
+        .filter(wiki_urls::Column::Url.eq(url))
+        .one(&ctx.data().database.pool)
+        .await?
+    {
+        let context = match (entry.guild_id, entry.channel_id, entry.message_id) {
+            (Some(guild_id), Some(channel_id), Some(message_id)) => {
+                format!(
+                    "https://discord.com/channels/{}/{}/{}",
+                    guild_id, channel_id, message_id
+                )
+            }
+            _ => "Unavailable".to_owned(),
+        };
+
+        ctx.send(
+            CreateReply::new()
+                .embed(
+                    CreateEmbed::new()
+                        .field("URL", entry.url, false)
+                        .field(
+                            "Updated By",
+                            entry.user_id.map_or_else(
+                                || "Unavailable".to_owned(),
+                                |id| format!("<@{}>", id),
+                            ),
+                            false,
+                        )
+                        .field("Context", context, false)
+                        .field(
+                            "Status",
+                            match entry.status {
+                                WikiUrlStatus::Pending => "Pending",
+                                WikiUrlStatus::Added => "Added",
+                                WikiUrlStatus::Removed => "Removed",
+                            },
+                            false,
+                        )
+                        .field(
+                            "Created",
+                            format!("<t:{}:R>", entry.created_at.to_utc().timestamp()),
+                            true,
+                        )
+                        .field(
+                            "Updated",
+                            format!("<t:{}:R>", entry.updated_at.to_utc().timestamp()),
+                            true,
+                        )
+                        .color(match entry.status {
+                            WikiUrlStatus::Pending => Color::ORANGE,
+                            WikiUrlStatus::Added => Color::DARK_GREEN,
+                            WikiUrlStatus::Removed => Color::RED,
+                        }),
+                )
+                .ephemeral(ephemeral.unwrap_or(true)),
+        )
+        .await?;
+    } else {
+        ctx.send(
+            CreateReply::new()
+                .content("Invalid input. Please choose from the autocompletion choices.")
+                .ephemeral(true),
+        )
+        .await?;
+    }
+
+    Ok(())
+}
+
 // TODO: Refactor
 #[poise::command(context_menu_command = "Update entries", owners_only)]
 pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
@@ -392,10 +496,11 @@ pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Re
 }
 
 #[must_use]
-pub fn commands() -> [crate::Command; 4] {
+pub fn commands() -> [crate::Command; 5] {
     [
         fmby(),
         search(),
+        context(),
         update_entries_in_message(),
         delete_entries_in_message(),
     ]
