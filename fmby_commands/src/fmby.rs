@@ -344,7 +344,9 @@ async fn autocomplete_url<'a>(
         .select_only()
         .column(wiki_urls::Column::Url)
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
-            query.filter(Expr::col(wiki_urls::Column::Url).ilike(format!("%{}%", partial)))
+            query.filter(
+                Expr::col(wiki_urls::Column::Url).ilike(format!("%{}%", clean_url(partial))),
+            )
         })
         .limit(25)
         .order_by_asc(wiki_urls::Column::Url)
