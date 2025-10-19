@@ -1,6 +1,6 @@
 use crate::{Context, Error};
 use fmby_core::drama::fill_phrase;
-use image::ImageFormat;
+use image::{ImageFormat, Rgba, RgbaImage, imageops};
 use poise::{
     CreateReply,
     serenity_prelude::{CreateAttachment, GetMessages},
@@ -57,10 +57,15 @@ pub async fn wordcloud(
         .into_iter()
         .flat_map(|m| tokenize(&m.content_safe(ctx.cache())))
         .collect::<Vec<_>>();
+
     let wc = WordCloud::new().generate(tokens);
+    let (w, h) = wc.dimensions();
+
+    let mut base = RgbaImage::from_pixel(w, h, Rgba([0, 0, 0, 255]));
+    imageops::overlay(&mut base, &wc, 0, 0);
 
     let mut buf = Cursor::new(Vec::new());
-    wc.write_to(&mut buf, ImageFormat::Png)?;
+    base.write_to(&mut buf, ImageFormat::Png)?;
 
     ctx.send(
         CreateReply::new().attachment(CreateAttachment::bytes(buf.into_inner(), "wordcloud.png")),
