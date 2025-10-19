@@ -55,7 +55,7 @@ pub async fn wordcloud(
         .messages(ctx, GetMessages::new().limit(message_limit.unwrap_or(25)))
         .await?
         .into_iter()
-        .flat_map(|m| tokenize(&m.content))
+        .flat_map(|m| tokenize(&m.content_safe(ctx.cache())))
         .collect::<Vec<_>>();
     let wc = WordCloud::new().generate(tokens);
 
