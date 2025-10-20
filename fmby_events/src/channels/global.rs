@@ -57,7 +57,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
     if let Some(entries) = get_wiki_urls_by_urls(&urls, &ctx.data::<Data>().database.pool).await {
         if !entries.is_empty() {
             match status {
-                Some(WikiUrlStatus::Added) | Some(WikiUrlStatus::Removed) => {
+                Some(WikiUrlStatus::Added | WikiUrlStatus::Removed) => {
                     update_wiki_urls_with_message(
                         entries,
                         message,
@@ -110,23 +110,19 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         && message.channel_id.get() != FmhyChannel::FEEDBACK
                     {
                         let _ = m.react(&ctx.http, '❌').await;
-                    };
+                    }
                 }
             }
         } else if let Some(status) = status {
-            let _ = WikiUrls::insert_many(
-                urls.into_iter()
-                    .map(|url| wiki_urls::ActiveModel {
-                        url: Set(url),
-                        user_id: Set(Some(message.author.id.get() as i64)),
-                        guild_id: Set(message.guild_id.map(|g| g.get() as i64)),
-                        channel_id: Set(Some(message.channel_id.get() as i64)),
-                        message_id: Set(Some(message.id.get() as i64)),
-                        status: Set(status),
-                        ..Default::default()
-                    })
-                    .collect::<Vec<_>>(),
-            )
+            let _ = WikiUrls::insert_many(urls.into_iter().map(|url| wiki_urls::ActiveModel {
+                url: Set(url),
+                user_id: Set(Some(message.author.id.get() as i64)),
+                guild_id: Set(message.guild_id.map(|g| g.get() as i64)),
+                channel_id: Set(Some(message.channel_id.get() as i64)),
+                message_id: Set(Some(message.id.get() as i64)),
+                status: Set(status),
+                ..Default::default()
+            }))
             .exec(&ctx.data::<Data>().database.pool)
             .await;
         }

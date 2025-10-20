@@ -13,7 +13,7 @@ pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
         Err(e) => {
             ctx.reply(format!("{}", e)).await?;
         }
-    };
+    }
 
     Ok(())
 }

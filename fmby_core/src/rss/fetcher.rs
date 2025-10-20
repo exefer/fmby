@@ -72,9 +72,7 @@ impl RssFetcher {
         feed_id: Uuid,
         entry: feed_rs::model::Entry,
     ) -> rss_feed_entries::ActiveModel {
-        let entry_id = if !entry.id.is_empty() {
-            entry.id
-        } else {
+        let entry_id = if entry.id.is_empty() {
             entry.links.first().map_or_else(
                 || {
                     let timestamp = entry
@@ -90,6 +88,8 @@ impl RssFetcher {
                 },
                 |link| link.href.clone(),
             )
+        } else {
+            entry.id
         };
 
         let title = entry

@@ -46,7 +46,7 @@ impl UrlFormatter for Vec<wiki_urls::Model> {
                     },
                 )
                 .collect::<Vec<_>>(),
-            _ => filtered
+            WikiUrlStatus::Added => filtered
                 .iter()
                 .map(|entry| format!("- {}", entry.url))
                 .collect::<Vec<_>>(),
