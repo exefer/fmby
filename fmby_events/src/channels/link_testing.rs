@@ -40,11 +40,11 @@ pub async fn on_thread_update(ctx: &Context, old: Option<&GuildThread>, new: &Gu
         return;
     }
 
-    let old_tags: HashSet<_> = old
-        .map(|o| o.applied_tags.iter().copied())
-        .into_iter()
-        .flatten()
-        .collect();
+    let Some(old) = old else {
+        return;
+    };
+
+    let old_tags: HashSet<_> = old.applied_tags.iter().copied().collect();
     let new_tags: HashSet<_> = new.applied_tags.iter().copied().collect();
 
     if old_tags == new_tags {
