@@ -6,6 +6,7 @@ pub fn clean_url(url: &str) -> &str {
         .trim_start_matches("https://")
         .trim_start_matches("http://")
         .trim_start_matches("www.")
+        .trim_end_matches("?tab=readme-ov-file")
         .trim_end_matches('/')
 }
 
