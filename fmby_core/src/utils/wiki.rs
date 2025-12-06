@@ -61,12 +61,12 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
 }
 
 pub fn collect_wiki_urls<'a>(content: &'a str) -> Vec<CowStr<'a>> {
-    let mut parser = Parser::new(content);
+    let parser = Parser::new(content);
     let mut urls = Vec::new();
 
-    while let Some(event) = parser.next() {
-        if let Event::Start(Tag::Item) = event {
-            urls.extend(collect_links_in_item(&mut parser));
+    for event in parser {
+        if let Event::Start(Tag::Link { dest_url, .. }) = event {
+            urls.push(dest_url);
         }
     }
 
@@ -78,6 +78,7 @@ where
     I: Iterator<Item = (Event<'a>, std::ops::Range<usize>)>,
 {
     let mut text = String::new();
+
     for (event, _) in parser.by_ref() {
         match event {
             Event::Text(t) | Event::Code(t) => text.push_str(&t),
@@ -85,22 +86,6 @@ where
             _ => {}
         }
     }
+
     text
-}
-
-fn collect_links_in_item<'a, I>(parser: &mut I) -> Vec<CowStr<'a>>
-where
-    I: Iterator<Item = Event<'a>>,
-{
-    let mut urls = Vec::new();
-
-    for event in parser {
-        match event {
-            Event::Start(Tag::Link { dest_url, .. }) => urls.push(dest_url),
-            Event::End(TagEnd::Item) => break,
-            _ => {}
-        }
-    }
-
-    urls
 }
