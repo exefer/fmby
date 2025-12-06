@@ -13,7 +13,7 @@ use poise::{
     CreateReply,
     serenity_prelude::{
         ActivityData, AutocompleteChoice, Channel, Color, CreateAutocompleteResponse, CreateEmbed,
-        CreateEmbedFooter, EditMessage, GenericChannelId, Message, OnlineStatus,
+        CreateEmbedFooter, CreateMessage, EditMessage, GenericChannelId, Message, OnlineStatus,
         futures::StreamExt,
     },
 };
@@ -498,13 +498,100 @@ pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Re
     Ok(())
 }
 
+#[poise::command(prefix_command, owners_only, aliases("incons"))]
+pub async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
+    let entries = WikiUrls::find()
+        .filter(wiki_urls::Column::ChannelId.is_not_in([
+            FmhyChannel::NSFW_ADD_LINKS,
+            FmhyChannel::NSFW_RECENTLY_ADDED,
+            FmhyChannel::NSFW_REMOVED,
+        ]))
+        .order_by_desc(wiki_urls::Column::UpdatedAt)
+        .all(&ctx.data().database.pool)
+        .await?;
+    let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
+        .await?
+        .text()
+        .await?;
+
+    let urls = collect_wiki_urls(&content)
+        .iter()
+        .map(|url| clean_url(url).to_owned())
+        .collect::<Vec<_>>();
+
+    let mut added_not_in_wiki = Vec::new();
+    let mut in_wiki_not_added = Vec::new();
+
+    for entry in entries {
+        let in_wiki = urls.contains(&entry.url);
+
+        match entry.status {
+            WikiUrlStatus::Added => {
+                if !in_wiki {
+                    added_not_in_wiki.push(entry.url);
+                }
+            }
+            WikiUrlStatus::Removed | WikiUrlStatus::Pending => {
+                if in_wiki {
+                    in_wiki_not_added.push(entry.url);
+                }
+            }
+        }
+    }
+
+    let mut embeds = Vec::new();
+
+    for chunk in added_not_in_wiki.chunks(50) {
+        let description = chunk
+            .iter()
+            .map(|url| format!("- {}", url))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        embeds.push(
+            CreateEmbed::new()
+                .title("Added → Removed")
+                .description(description)
+                .color(Color::RED),
+        );
+    }
+
+    for chunk in in_wiki_not_added.chunks(50) {
+        let description = chunk
+            .iter()
+            .map(|url| format!("- {}", url))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        embeds.push(
+            CreateEmbed::new()
+                .title("Removed/Pending → Added")
+                .description(description)
+                .color(Color::ORANGE),
+        );
+    }
+
+    if embeds.is_empty() {
+        ctx.say("No inconsistencies found.").await?;
+    } else {
+        for embed in embeds {
+            ctx.channel_id()
+                .send_message(ctx.http(), CreateMessage::new().embed(embed))
+                .await?;
+        }
+    }
+
+    Ok(())
+}
+
 #[must_use]
-pub fn commands() -> [crate::Command; 5] {
+pub fn commands() -> [crate::Command; 6] {
     [
         fmby(),
         search(),
         context(),
         update_entries_in_message(),
         delete_entries_in_message(),
+        inconsistencies(),
     ]
 }
