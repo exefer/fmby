@@ -116,6 +116,11 @@ pub async fn migrate(
         .await?
         .text()
         .await?;
+    let urls = collect_wiki_urls(&content)
+        .iter()
+        .map(|url| clean_url(url).to_owned())
+        .collect::<Vec<_>>();
+    drop(content);
     let mut messages_processed = 0u32;
     let mut messages_skipped = 0u32;
     let mut urls_processed = 0u32;
@@ -153,17 +158,17 @@ pub async fn migrate(
                     continue;
                 };
 
-                let Some(urls) = extract_urls(m_content) else {
+                let Some(m_urls) = extract_urls(m_content) else {
                     messages_skipped += 1;
                     continue;
                 };
 
                 let urls = match status {
-                    WikiUrlStatus::Pending => urls,
+                    WikiUrlStatus::Pending => m_urls,
                     WikiUrlStatus::Added => {
-                        let urls_in_wiki = urls
+                        let urls_in_wiki = m_urls
                             .into_iter()
-                            .filter(|url| content.contains(url))
+                            .filter(|url| urls.contains(url))
                             .collect::<Vec<_>>();
 
                         if urls_in_wiki.is_empty() {
@@ -173,9 +178,9 @@ pub async fn migrate(
                         urls_in_wiki
                     }
                     WikiUrlStatus::Removed => {
-                        let urls_not_in_wiki = urls
+                        let urls_not_in_wiki = m_urls
                             .into_iter()
-                            .filter(|url| !content.contains(url))
+                            .filter(|url| !urls.contains(url))
                             .collect::<Vec<_>>();
 
                         if urls_not_in_wiki.is_empty() {
@@ -250,11 +255,6 @@ pub async fn migrate(
                 .await?;
         }
     }
-
-    let urls = collect_wiki_urls(&content)
-        .iter()
-        .map(|url| clean_url(url).to_owned())
-        .collect::<Vec<_>>();
 
     for url in urls {
         entries
