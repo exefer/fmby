@@ -1,13 +1,9 @@
 [package]
 name = "fmby_entities"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 publish = false
 
-[lib]
-name = "fmby_entities"
-path = "src/lib.rs"
-
 [dependencies]
-serde = { workspace = true }
 sea-orm = { workspace = true }
+serde = { workspace = true }

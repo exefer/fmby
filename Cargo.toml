@@ -2,68 +2,63 @@
 name = "fmby"
 version = "0.1.0"
 edition = "2024"
-authors = ["Exefer"]
-repository = "https://github.com/exefer/fmby"
 description = "A remake of FMHY/bot"
-readme = "README.md"
+repository = "https://github.com/exefer/fmby"
+license = "GPL-3.0-or-later"
 publish = false
 
 [workspace]
 members = [
-    "fmby_migrations",
-    "fmby_entities",
-    "fmby_core",
-    "fmby_commands",
-    "fmby_events",
+  "fmby_commands",
+  "fmby_core",
+  "fmby_entities",
+  "fmby_events",
+  "fmby_migrations",
 ]
 
-[dependencies]
-fmby_migrations = { path = "fmby_migrations" }
-fmby_entities = { path = "fmby_entities" }
-fmby_core = { path = "fmby_core" }
-fmby_commands = { path = "fmby_commands" }
-fmby_events = { path = "fmby_events" }
-poise.workspace = true
-tokio.workspace = true
-dotenvy = "0.15.7"
-tracing-subscriber = "0.3.19"
-
 [workspace.dependencies]
-tokio = { version = "1.47.1", features = [
-    "macros",
-    "rt-multi-thread",
-    "process",
-] }
-sea-orm = { version = "1.1.14", default-features = false, features = [
-    "sqlx-postgres",
-    "runtime-tokio-rustls",
-    "with-json",
-    "with-chrono",
-    "with-uuid",
-] }
-serde = { version = "1.0.219", features = ["derive"] }
 anyhow = "1.0.99"
-reqwest = { version = "0.12.23", default-features = false, features = [
-    "rustls-tls",
-    "json",
-] }
-tracing = "0.1.41"
-url = "2.5.7"
-serde_json = "1.0.143"
 rand = "0.9.2"
 regex = "1.11.2"
-
-[patch.'https://github.com/serenity-rs/serenity']
-serenity = { git = 'https://github.com/jamesbt365/serenity', branch = 'components-v2-withtag-gradient-nameplates/decor-resolved' }
+reqwest = { version = "0.12.23", default-features = false, features = [
+  "json",
+  "rustls-tls",
+] }
+sea-orm = { version = "1.1.14", default-features = false, features = [
+  "runtime-tokio-rustls",
+  "sqlx-postgres",
+  "with-chrono",
+  "with-json",
+  "with-uuid",
+] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.143"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1.41"
+url = "2.5.7"
 
 [workspace.dependencies.poise]
 git = "https://github.com/serenity-rs/poise"
-features = ["cache"]
 branch = "serenity-next"
+features = ["cache"]
+
+[dependencies]
+dotenvy = "0.15.7"
+fmby_commands = { path = "fmby_commands" }
+fmby_core = { path = "fmby_core" }
+fmby_entities = { path = "fmby_entities" }
+fmby_events = { path = "fmby_events" }
+fmby_migrations = { path = "fmby_migrations" }
+poise.workspace = true
+tokio.workspace = true
+tracing-subscriber = "0.3.19"
+
+[patch.'https://github.com/serenity-rs/serenity']
+serenity = { git = "https://github.com/jamesbt365/serenity", branch = "components-v2-withtag-gradient-nameplates/decor-resolved" }
 
 [profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
 opt-level = "s"
 strip = true
+lto = true
+panic = "abort"
+codegen-units = 1

@@ -2,16 +2,17 @@
 name = "fmby_commands"
 version = "0.1.0"
 edition = "2024"
+publish = false
 
 [dependencies]
 fmby_core = { path = "../fmby_core" }
 fmby_entities = { path = "../fmby_entities" }
-poise.workspace = true
-sea-orm.workspace = true
-url.workspace = true
-tokio.workspace = true
-rand.workspace = true
-reqwest.workspace = true
-regex.workspace = true
-wordcloud-rs = { version = "0.1.17", default-features = false }
 image = { version = "0.25.8", default-features = false, features = ["png"] }
+poise.workspace = true
+rand.workspace = true
+regex.workspace = true
+reqwest.workspace = true
+sea-orm.workspace = true
+tokio.workspace = true
+url.workspace = true
+wordcloud-rs = { version = "0.1.17", default-features = false }

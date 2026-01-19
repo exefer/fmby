@@ -2,10 +2,11 @@
 name = "fmby_events"
 version = "0.1.0"
 edition = "2024"
+publish = false
 
 [dependencies]
 fmby_core = { path = "../fmby_core" }
 fmby_entities = { path = "../fmby_entities" }
-sea-orm.workspace = true
 poise.workspace = true
+sea-orm.workspace = true
 tracing.workspace = true
