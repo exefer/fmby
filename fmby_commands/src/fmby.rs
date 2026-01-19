@@ -2,7 +2,7 @@ use crate::{Context, Error};
 use fmby_core::{
     constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
     utils::{
-        db::{ChunkSize, infer_wiki_url_status, update_wiki_urls_with_message},
+        db::{ChunkSize, infer_wiki_url_status},
         message::get_content_or_referenced,
         url::{clean_url, extract_urls},
         wiki::collect_wiki_urls,
@@ -12,8 +12,8 @@ use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
 use poise::{
     CreateReply,
     serenity_prelude::{
-        ActivityData, AutocompleteChoice, Channel, Color, CreateAutocompleteResponse, CreateEmbed,
-        CreateEmbedFooter, CreateMessage, EditMessage, GenericChannelId, Message, OnlineStatus,
+        ActivityData, AutocompleteChoice, Color, CreateAutocompleteResponse, CreateEmbed,
+        CreateEmbedFooter, CreateMessage, EditMessage, GenericChannelId, OnlineStatus,
         futures::StreamExt,
     },
 };
@@ -438,66 +438,6 @@ pub async fn context(
     Ok(())
 }
 
-// TODO: Refactor
-#[poise::command(context_menu_command = "Update entries", owners_only)]
-pub async fn update_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
-    let Some(m_content) = get_content_or_referenced(&message) else {
-        return Ok(());
-    };
-
-    let Some(urls) = extract_urls(m_content) else {
-        return Ok(());
-    };
-
-    let mut status = infer_wiki_url_status(message.channel_id.get());
-
-    if status.is_none() {
-        match message.channel(ctx.http()).await {
-            Ok(Channel::GuildThread(thread)) => {
-                if !matches!(
-                    thread.parent_id.get(),
-                    FmhyChannel::ADD_LINKS
-                        | FmhyChannel::NSFW_ADD_LINKS
-                        | FmhyChannel::LINK_TESTING
-                ) {
-                    return Ok(());
-                }
-                status = Some(WikiUrlStatus::Pending);
-            }
-            _ => return Ok(()),
-        }
-    }
-
-    let status = status.unwrap();
-    let entries = WikiUrls::find()
-        .filter(wiki_urls::Column::Url.is_in(&urls))
-        .all(&ctx.data().database.pool)
-        .await?;
-
-    update_wiki_urls_with_message(entries, &message, status, &ctx.data().database.pool).await;
-
-    Ok(())
-}
-
-// TODO: Refactor
-#[poise::command(context_menu_command = "Delete entries", owners_only)]
-pub async fn delete_entries_in_message(ctx: Context<'_>, message: Message) -> Result<(), Error> {
-    let Some(m_content) = get_content_or_referenced(&message) else {
-        return Ok(());
-    };
-
-    let Some(urls) = extract_urls(m_content) else {
-        return Ok(());
-    };
-
-    let _ = WikiUrls::delete_many()
-        .filter(wiki_urls::Column::Url.is_in(urls))
-        .exec(&ctx.data().database.pool)
-        .await;
-
-    Ok(())
-}
-
 #[poise::command(prefix_command, owners_only, aliases("incons"))]
 pub async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
     let entries = WikiUrls::find()
@@ -585,13 +525,6 @@ pub async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 #[must_use]
-pub fn commands() -> [crate::Command; 6] {
-    [
-        fmby(),
-        search(),
-        context(),
-        update_entries_in_message(),
-        delete_entries_in_message(),
-        inconsistencies(),
-    ]
+pub fn commands() -> [crate::Command; 4] {
+    [fmby(), search(), context(), inconsistencies()]
 }
