@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 fmby_core = { path = "../fmby_core" }
 fmby_entities = { path = "../fmby_entities" }
-image = { version = "0.25.8", default-features = false, features = ["png"] }
+image = { version = "0.25.9", default-features = false, features = ["png"] }
 poise.workspace = true
 rand.workspace = true
 regex.workspace = true

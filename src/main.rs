@@ -37,8 +37,8 @@ async fn main() {
         | GatewayIntents::DIRECT_MESSAGE_REACTIONS;
 
     let client = serenity::Client::builder(token, intents)
-        .framework(framework)
-        .event_handler(fmby_events::Handler)
+        .framework(Box::new(framework))
+        .event_handler(Arc::new(fmby_events::Handler))
         .data(Arc::new(fmby_core::structs::Data {
             time_started: std::time::Instant::now(),
             has_started: std::sync::atomic::AtomicBool::new(false),
