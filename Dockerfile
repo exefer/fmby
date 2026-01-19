@@ -1,14 +1,5 @@
-FROM lukemathwalker/cargo-chef:latest-rust-alpine AS chef
+FROM rust:alpine AS builder
 WORKDIR /usr/src/fmby
-
-FROM chef AS planner
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-
-FROM chef AS builder
-COPY --from=planner /usr/src/fmby/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-
 COPY . .
 RUN cargo build --release
 
