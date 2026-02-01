@@ -1,9 +1,9 @@
+mod channels;
 use fmby_core::{
     error::Error, rss::RssScheduler, start_background_task, structs::Data,
     tasks::stale_remover::StaleRemover,
 };
 use poise::serenity_prelude::{self as serenity, FullEvent};
-mod channels;
 
 pub struct Handler;
 
