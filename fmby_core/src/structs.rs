@@ -1,4 +1,7 @@
-use crate::{database::FmbyDatabase, drama::DramaConfig, error::Error, rss::RssConfig};
+use crate::database::FmbyDatabase;
+use crate::drama::DramaConfig;
+use crate::error::Error;
+use crate::rss::RssConfig;
 
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub type Command = poise::Command<Data, Error>;

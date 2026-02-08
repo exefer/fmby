@@ -1,15 +1,15 @@
-use crate::{Context, Error};
 use fmby_core::rss::{RssConfig, RssFetcher};
-use fmby_entities::{prelude::*, rss_feeds, sea_orm_active_enums::RssFeedStatus};
-use poise::{
-    CreateReply,
-    serenity_prelude::{AutocompleteChoice, CreateAllowedMentions, CreateAutocompleteResponse},
+use fmby_entities::sea_orm_active_enums::RssFeedStatus;
+use fmby_entities::{prelude::*, rss_feeds};
+use poise::CreateReply;
+use poise::serenity_prelude::{
+    AutocompleteChoice, CreateAllowedMentions, CreateAutocompleteResponse,
 };
-use sea_orm::{
-    ActiveValue::*, QueryFilter, QuerySelect, QueryTrait, prelude::*,
-    sea_query::extension::postgres::PgExpr,
-};
+use sea_orm::sea_query::extension::postgres::PgExpr;
+use sea_orm::{ActiveValue::*, QueryFilter, QuerySelect, QueryTrait, prelude::*};
 use url::Url;
+
+use crate::{Command, Context, Error};
 
 async fn parse_uuid_or_reply(ctx: &Context<'_>, input: &str) -> Option<Uuid> {
     if let Ok(u) = input.parse::<u128>() {
@@ -210,7 +210,6 @@ pub async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error
     Ok(())
 }
 
-#[must_use]
-pub fn commands() -> [crate::Command; 2] {
+pub fn commands() -> [Command; 2] {
     [rss(), fetch_feed_title()]
 }

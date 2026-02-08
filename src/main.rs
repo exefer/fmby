@@ -1,5 +1,6 @@
-use poise::serenity_prelude::{self as serenity, GatewayIntents};
 use std::sync::Arc;
+
+use poise::serenity_prelude::{self as serenity, GatewayIntents};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]

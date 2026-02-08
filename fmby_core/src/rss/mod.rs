@@ -1,10 +1,12 @@
 mod fetcher;
 mod manager;
 mod scheduler;
+
+use serde::Deserialize;
+
 pub use fetcher::*;
 pub use manager::*;
 pub use scheduler::*;
-use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RssConfig {

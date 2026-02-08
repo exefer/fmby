@@ -1,9 +1,12 @@
-use crate::rss::RssConfig;
+use std::sync::LazyLock;
+use std::time::Duration;
+
 use anyhow::anyhow;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, prelude::*, sqlx::types::chrono::Utc};
-use std::{sync::LazyLock, time::Duration};
+
+use crate::rss::RssConfig;
 
 pub struct RssFetcher {
     client: reqwest::Client,

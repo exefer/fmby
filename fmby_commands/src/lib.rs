@@ -3,20 +3,16 @@ pub mod fun;
 pub mod meta;
 pub mod rss;
 pub mod sql;
-pub(crate) use fmby_core::{
-    error::Error,
-    structs::{Command, Context},
-};
 
-#[must_use]
-pub fn commands() -> Vec<crate::Command> {
-    let commands: Vec<crate::Command> = meta::commands()
+pub(crate) use fmby_core::error::Error;
+pub(crate) use fmby_core::structs::{Command, Context};
+
+pub fn commands() -> Vec<Command> {
+    meta::commands()
         .into_iter()
         .chain(fmby::commands())
         .chain(sql::commands())
         .chain(rss::commands())
         .chain(fun::commands())
-        .collect();
-
-    commands
+        .collect()
 }

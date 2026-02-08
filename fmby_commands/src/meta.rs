@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use crate::{Command, Context, Error};
 
 /// Post the link to the bot's source code
 #[poise::command(
@@ -53,7 +53,6 @@ async fn register(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[must_use]
-pub fn commands() -> [crate::Command; 4] {
+pub fn commands() -> [Command; 4] {
     [source(), shutdown(), uptime(), register()]
 }

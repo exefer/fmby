@@ -1,14 +1,13 @@
-use fmby_core::{
-    constants::{AUTO_THREAD_MAPPINGS, FmhyChannel, FmhyServerRole},
-    structs::Data,
-    utils::{
-        db::{get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message},
-        formatters::UrlFormatter,
-        message::get_content_or_referenced,
-        url::extract_urls,
-    },
+use fmby_core::constants::{AUTO_THREAD_MAPPINGS, FmhyChannel, FmhyServerRole};
+use fmby_core::structs::Data;
+use fmby_core::utils::db::{
+    get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message,
 };
-use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
+use fmby_core::utils::formatters::UrlFormatter;
+use fmby_core::utils::message::get_content_or_referenced;
+use fmby_core::utils::url::extract_urls;
+use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
+use fmby_entities::{prelude::*, wiki_urls};
 use poise::serenity_prelude::{
     Channel, Color, CreateAllowedMentions, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
     CreateMessage, CreateThread, Message, MessageReference, Reaction, Timestamp, prelude::*,

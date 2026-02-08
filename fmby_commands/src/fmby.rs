@@ -1,30 +1,24 @@
-use crate::{Context, Error};
-use fmby_core::{
-    constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel},
-    utils::{
-        db::{ChunkSize, infer_wiki_url_status},
-        message::get_content_or_referenced,
-        url::{clean_url, extract_urls},
-        wiki::collect_wiki_urls,
-    },
-};
-use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
-use poise::{
-    CreateReply,
-    serenity_prelude::{
-        ActivityData, AutocompleteChoice, Color, CreateAutocompleteResponse, CreateEmbed,
-        CreateEmbedFooter, CreateMessage, EditMessage, GenericChannelId, OnlineStatus,
-        futures::StreamExt,
-    },
-};
-use sea_orm::{
-    ActiveValue::*,
-    QueryOrder, QuerySelect, QueryTrait, TransactionTrait,
-    prelude::*,
-    sea_query::{OnConflict, extension::postgres::PgExpr},
-    sqlx::types::chrono::Utc,
-};
 use std::collections::HashMap;
+
+use fmby_core::constants::{FMHY_SINGLE_PAGE_ENDPOINT, FmhyChannel};
+use fmby_core::utils::db::{ChunkSize, infer_wiki_url_status};
+use fmby_core::utils::message::get_content_or_referenced;
+use fmby_core::utils::url::{clean_url, extract_urls};
+use fmby_core::utils::wiki::collect_wiki_urls;
+use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
+use fmby_entities::{prelude::*, wiki_urls};
+use futures::StreamExt;
+use poise::CreateReply;
+use poise::serenity_prelude::{
+    ActivityData, AutocompleteChoice, Color, CreateAutocompleteResponse, CreateEmbed,
+    CreateEmbedFooter, CreateMessage, EditMessage, GenericChannelId, OnlineStatus, futures,
+};
+use sea_orm::sea_query::OnConflict;
+use sea_orm::sea_query::extension::postgres::PgExpr;
+use sea_orm::sqlx::types::chrono::Utc;
+use sea_orm::{ActiveValue::*, QueryOrder, QuerySelect, QueryTrait, TransactionTrait, prelude::*};
+
+use crate::{Command, Context, Error};
 
 #[poise::command(
     slash_command,
@@ -524,7 +518,6 @@ pub async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[must_use]
-pub fn commands() -> [crate::Command; 4] {
+pub fn commands() -> [Command; 4] {
     [fmby(), search(), context(), inconsistencies()]
 }

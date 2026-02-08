@@ -1,14 +1,16 @@
-use crate::error::Error;
-use poise::serenity_prelude::{self as serenity, prelude::*};
 use std::time::Duration;
+
+use poise::serenity_prelude as serenity;
 use tokio::time::MissedTickBehavior;
+
+use crate::error::Error;
 
 /// Trait for a background task that can be run periodically on Tokio.
 #[serenity::async_trait]
 pub trait BackgroundTask: Sized + Send + 'static {
     /// Create a new instance of the task using the provided `Context`.
     /// This is called once before the task starts running.
-    async fn init(ctx: Context) -> Result<Self, Error>;
+    async fn init(ctx: serenity::Context) -> Result<Self, Error>;
 
     /// How often the task should be run.
     /// This gets called after every call to `run()`.
@@ -30,7 +32,7 @@ pub trait BackgroundTask: Sized + Send + 'static {
 }
 
 /// Starts a background task that implements [`BackgroundTask`] on Tokio.
-pub async fn start_background_task<T>(ctx: &Context)
+pub async fn start_background_task<T>(ctx: &serenity::Context)
 where
     T: BackgroundTask,
 {

@@ -1,6 +1,8 @@
-use crate::{Context, Error};
-use poise::{CreateReply, serenity_prelude::MessageFlags};
+use poise::CreateReply;
+use poise::serenity_prelude::MessageFlags;
 use sea_orm::{ConnectionTrait, Statement};
+
+use crate::{Command, Context, Error};
 
 /// Executes a raw SQL command and replies with the number of affected rows or an error
 #[poise::command(prefix_command, owners_only)]
@@ -56,7 +58,6 @@ pub async fn sql_query(ctx: Context<'_>, sql: String, #[flag] pretty: bool) -> R
     Ok(())
 }
 
-#[must_use]
-pub fn commands() -> [crate::Command; 2] {
+pub fn commands() -> [Command; 2] {
     [sql_exec(), sql_query()]
 }

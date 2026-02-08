@@ -1,7 +1,10 @@
-use crate::constants::FmhyChannel;
-use fmby_entities::{prelude::*, sea_orm_active_enums::WikiUrlStatus, wiki_urls};
+use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
+use fmby_entities::{prelude::*, wiki_urls};
 use poise::serenity_prelude::Message;
-use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*, sqlx::types::chrono::Utc};
+use sea_orm::sqlx::types::chrono::Utc;
+use sea_orm::{ActiveValue::*, IntoActiveModel, Iterable, prelude::*};
+
+use crate::constants::FmhyChannel;
 
 pub trait ChunkSize {
     fn chunk_size() -> usize;

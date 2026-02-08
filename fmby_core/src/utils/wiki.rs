@@ -1,6 +1,7 @@
-use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 use pulldown_cmark::{CowStr, Event, Parser, Tag, TagEnd};
 use regex::Regex;
+
+use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 
 pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
     let query = query.to_lowercase();

@@ -1,5 +1,6 @@
-use poise::serenity_prelude::{self as serenity, Permissions};
 use std::fmt;
+
+use poise::serenity_prelude::{self as serenity, Permissions};
 
 impl fmt::Display for PermissionErrorType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

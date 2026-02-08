@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use rand::prelude::*;
 use serde::Deserialize;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DramaConfig {

@@ -1,17 +1,19 @@
-use crate::{
-    BackgroundTask,
-    error::Error,
-    rss::{RssFetcher, RssManager},
-    structs::Data,
-};
+use std::sync::Arc;
+use std::time::Duration;
+
 use fmby_entities::{rss_feed_entries, rss_feeds};
+use futures::StreamExt;
+use futures::stream::FuturesUnordered;
 use poise::serenity_prelude::{
     self as serenity, CreateEmbed, CreateEmbedFooter, CreateMessage, GenericChannelId, Timestamp,
-    futures::{self, StreamExt},
-    prelude::*,
+    futures, prelude::*,
 };
 use sea_orm::TryIntoModel;
-use std::{sync::Arc, time::Duration};
+
+use crate::background_task::BackgroundTask;
+use crate::error::Error;
+use crate::rss::{RssFetcher, RssManager};
+use crate::structs::Data;
 
 pub struct RssScheduler {
     ctx: Context,
@@ -41,7 +43,7 @@ impl RssScheduler {
                 .max_concurrent_checks,
         ));
 
-        let mut tasks = futures::stream::FuturesUnordered::new();
+        let mut tasks = FuturesUnordered::new();
 
         for feed in feeds {
             let sem = Arc::clone(&semaphore);

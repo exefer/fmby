@@ -1,5 +1,7 @@
-use fmby_entities::{prelude::*, rss_feed_entries, rss_feeds, sea_orm_active_enums::RssFeedStatus};
-use sea_orm::{QueryOrder, prelude::*, sea_query::OnConflict};
+use fmby_entities::sea_orm_active_enums::RssFeedStatus;
+use fmby_entities::{prelude::*, rss_feed_entries, rss_feeds};
+use sea_orm::sea_query::OnConflict;
+use sea_orm::{QueryOrder, prelude::*};
 
 pub struct RssManager {
     pool: DatabaseConnection,

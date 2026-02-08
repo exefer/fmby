@@ -1,5 +1,6 @@
-use regex::Regex;
 use std::sync::LazyLock;
+
+use regex::Regex;
 
 pub fn clean_url(url: &str) -> &str {
     url.trim()

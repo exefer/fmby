@@ -1,14 +1,16 @@
-use crate::{Context, Error};
+use std::collections::HashMap;
+use std::io::Cursor;
+use std::sync::LazyLock;
+
 use fmby_core::drama::fill_phrase;
 use image::{ImageFormat, Rgba, RgbaImage, imageops};
-use poise::{
-    CreateReply,
-    serenity_prelude::{CreateAttachment, GetMessages},
-};
+use poise::CreateReply;
+use poise::serenity_prelude::{CreateAttachment, GetMessages};
 use rand::prelude::*;
 use regex::Regex;
-use std::{collections::HashMap, io::Cursor, sync::LazyLock};
 use wordcloud_rs::{Token, WordCloud};
+
+use crate::{Command, Context, Error};
 
 /// Generate funny piracy community drama
 #[poise::command(slash_command)]
@@ -75,6 +77,6 @@ pub async fn wordcloud(
     Ok(())
 }
 
-pub fn commands() -> [crate::Command; 2] {
+pub fn commands() -> [Command; 2] {
     [drama(), wordcloud()]
 }

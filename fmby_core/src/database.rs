@@ -1,5 +1,6 @@
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::time::Duration;
+
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 pub struct FmbyDatabase {
     pub pool: DatabaseConnection,
