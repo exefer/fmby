@@ -148,11 +148,11 @@ pub async fn migrate(
 
                 messages_processed += 1;
 
-                let Some(m_content) = get_content_or_referenced(&message) else {
+                let Some(m_content) = get_content_or_referenced(ctx.http(), &message).await else {
                     continue;
                 };
 
-                let Some(m_urls) = extract_urls(m_content) else {
+                let Some(m_urls) = extract_urls(&m_content) else {
                     messages_skipped += 1;
                     continue;
                 };

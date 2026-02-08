@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use fmby_core::constants::{AUTO_THREAD_MAPPINGS, FmhyChannel, FmhyServerRole};
 use fmby_core::structs::Data;
 use fmby_core::utils::db::{
@@ -37,17 +39,20 @@ pub async fn on_message(ctx: &Context, message: &Message) {
         return;
     }
 
-    let Some(m_content) = get_content_or_referenced(message).or_else(|| {
-        message
-            .embeds
-            .first()
-            .and_then(|e| e.fields.iter().find(|f| f.name == "Message"))
-            .map(|f| f.value.as_str())
-    }) else {
+    let Some(m_content) = get_content_or_referenced(&ctx.http, message)
+        .await
+        .or_else(|| {
+            message
+                .embeds
+                .first()
+                .and_then(|e| e.fields.iter().find(|f| f.name == "Message"))
+                .map(|f| Cow::Borrowed(f.value.as_str()))
+        })
+    else {
         return;
     };
 
-    let Some(urls) = extract_urls(m_content) else {
+    let Some(urls) = extract_urls(&m_content) else {
         return;
     };
 
