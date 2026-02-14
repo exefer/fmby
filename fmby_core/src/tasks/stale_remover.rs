@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use fmby_entities::sea_orm_active_enums::WikiUrlStatus;
 use fmby_entities::{prelude::*, wiki_urls};
-use poise::serenity_prelude::{self as serenity, Channel, Context, GenericChannelId, MessageId};
+use poise::serenity_prelude::{Channel, Context, GenericChannelId, MessageId, async_trait};
 use sea_orm::{QueryOrder, prelude::*};
 
 use crate::background_task::BackgroundTask;
@@ -21,7 +21,7 @@ impl StaleRemover {
     }
 }
 
-#[serenity::async_trait]
+#[async_trait]
 impl BackgroundTask for StaleRemover {
     async fn init(ctx: Context) -> Result<Self, Error> {
         Ok(Self::new(ctx))

@@ -1,16 +1,17 @@
 use std::time::Duration;
 
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{Context, async_trait};
 use tokio::time::MissedTickBehavior;
+use tracing::{error, info, warn};
 
 use crate::error::Error;
 
 /// Trait for a background task that can be run periodically on Tokio.
-#[serenity::async_trait]
+#[async_trait]
 pub trait BackgroundTask: Sized + Send + 'static {
     /// Create a new instance of the task using the provided `Context`.
     /// This is called once before the task starts running.
-    async fn init(ctx: serenity::Context) -> Result<Self, Error>;
+    async fn init(ctx: Context) -> Result<Self, Error>;
 
     /// How often the task should be run.
     /// This gets called after every call to `run()`.
@@ -32,14 +33,14 @@ pub trait BackgroundTask: Sized + Send + 'static {
 }
 
 /// Starts a background task that implements [`BackgroundTask`] on Tokio.
-pub async fn start_background_task<T>(ctx: &serenity::Context)
+pub async fn start_background_task<T>(ctx: &Context)
 where
     T: BackgroundTask,
 {
     let mut task = match T::init(ctx.clone()).await {
         Ok(task) => task,
         Err(e) => {
-            tracing::error!(
+            error!(
                 "Failed to init background task {}: {}",
                 std::any::type_name::<T>(),
                 e
@@ -57,7 +58,7 @@ where
 
             if let Some(timeout) = task.timeout() {
                 if tokio::time::timeout(timeout, task.run()).await.is_err() {
-                    tracing::warn!("Background task {} timed out", std::any::type_name::<T>());
+                    warn!("Background task {} timed out", std::any::type_name::<T>());
                 }
             } else {
                 task.run().await;
@@ -65,5 +66,5 @@ where
         }
     });
 
-    tracing::info!("Started background task {}", std::any::type_name::<T>());
+    info!("Started background task {}", std::any::type_name::<T>());
 }

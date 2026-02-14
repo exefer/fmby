@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use sea_orm_migration::prelude::extension::postgres::Type;
 use sea_orm_migration::{prelude::*, schema::*};
 
@@ -10,7 +11,7 @@ const IDX_RSS_FEEDS_ACTIVE_LAST_CHECKED_AT: &str = "idx_rss_feeds_active_last_ch
 const FK_RSS_FEED_ENTRIES_FEED_ID: &str = "fk_rss_feed_entries_feed_id";
 const UQ_RSS_FEED_ENTRIES_FEED_ENTRY_ID: &str = "uq_rss_feed_entries_feed_entry_id";
 
-#[async_trait::async_trait]
+#[async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager

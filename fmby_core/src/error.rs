@@ -1,6 +1,6 @@
 use std::fmt;
 
-use poise::serenity_prelude::{self as serenity, Permissions};
+use poise::serenity_prelude::{Context, Permissions};
 
 impl fmt::Display for PermissionErrorType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -42,4 +42,4 @@ pub enum Error {
 }
 
 #[expect(unused_variables, clippy::unused_async)]
-pub async fn event_handler(ctx: &serenity::Context, error: Error) {}
+pub async fn event_handler(ctx: &Context, error: Error) {}

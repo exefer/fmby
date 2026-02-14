@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, prelude::*, sqlx::types::chrono::Utc};
+use tracing::{debug, info};
 
 use crate::rss::RssConfig;
 
@@ -27,7 +28,7 @@ impl RssFetcher {
         &self,
         feed: &rss_feeds::Model,
     ) -> anyhow::Result<Vec<rss_feed_entries::ActiveModel>> {
-        tracing::debug!("Starting feed retrieval for: {} at {}", feed.name, feed.url);
+        debug!("Starting feed retrieval for: {} at {}", feed.name, feed.url);
 
         let response = self.client.get(&feed.url).send().await?;
 
@@ -43,7 +44,7 @@ impl RssFetcher {
         let parsed_feed = feed_rs::parser::parse(content.as_bytes())
             .map_err(|e| anyhow!("Feed parsing error: {}", e))?;
 
-        tracing::info!(
+        info!(
             "Successfully parsed '{}' containing {} entries",
             parsed_feed
                 .title
@@ -155,7 +156,7 @@ impl RssFetcher {
     }
 
     pub async fn validate_feed_url(&self, url: &str) -> anyhow::Result<String> {
-        tracing::debug!("Validating feed URL: {}", url);
+        debug!("Validating feed URL: {}", url);
 
         let response = self.client.get(url).send().await?;
 

@@ -5,20 +5,20 @@ use fmby_core::error::Error;
 use fmby_core::rss::RssScheduler;
 use fmby_core::structs::Data;
 use fmby_core::tasks::stale_remover::StaleRemover;
-use poise::serenity_prelude::{self as serenity, FullEvent};
+use poise::serenity_prelude::{Context, EventHandler, FullEvent, async_trait};
 
 pub struct Handler;
 
-#[serenity::async_trait]
-impl serenity::EventHandler for Handler {
-    async fn dispatch(&self, ctx: &serenity::Context, event: &FullEvent) {
+#[async_trait]
+impl EventHandler for Handler {
+    async fn dispatch(&self, ctx: &Context, event: &FullEvent) {
         if let Err(e) = event_handler(ctx, event).await {
             fmby_core::error::event_handler(ctx, e).await;
         }
     }
 }
 
-pub async fn event_handler(ctx: &serenity::Context, event: &FullEvent) -> Result<(), Error> {
+pub async fn event_handler(ctx: &Context, event: &FullEvent) -> Result<(), Error> {
     match event {
         FullEvent::Ready { data_about_bot, .. } => {
             let data = ctx.data_ref::<Data>();
