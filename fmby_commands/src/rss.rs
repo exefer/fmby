@@ -85,7 +85,7 @@ pub async fn add(
             feed.insert(&ctx.data().database.pool).await?;
 
             ctx.reply(format!(
-                "Successfully added \"{}\" RSS Feed with URL <{}>!",
+                "Successfully added `{}` RSS Feed with URL <{}>!",
                 name, url
             ))
             .await?;
@@ -120,7 +120,7 @@ pub async fn remove(
             .unwrap();
 
         ctx.reply(format!(
-            "Successfully removed \"{}\" RSS Feed with URL <{}>!",
+            "Successfully removed `{}` RSS Feed with URL <{}>!",
             feed.name, feed.url
         ))
         .await?;
@@ -149,7 +149,7 @@ pub async fn rename(
             .unwrap();
 
         ctx.reply(format!(
-            "Successfully renamed to \"{}\" RSS Feed with URL <{}>!",
+            "Successfully renamed to `{}` RSS Feed with URL <{}>!",
             feed.name, feed.url
         ))
         .await?;

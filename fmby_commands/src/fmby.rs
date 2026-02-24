@@ -317,7 +317,7 @@ pub async fn search(
     ctx.send(
         CreateReply::new().embed(
             CreateEmbed::new()
-                .title(format!("Search results for \"{}\"", query))
+                .title(format!("Search results for `{}`", query))
                 .description(if result.is_empty() {
                     "Nothing found."
                 } else {
