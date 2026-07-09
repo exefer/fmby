@@ -39,7 +39,7 @@ impl BackgroundTask for StaleRemover {
                     .lt(Expr::current_timestamp().sub(Expr::cust("INTERVAL '1 day'"))),
             )
             .order_by_asc(wiki_urls::Column::CreatedAt)
-            .all(&self.ctx.data_ref::<Data>().database.pool)
+            .all(&self.ctx.data_ref::<Data>().pool)
             .await
         else {
             return;
@@ -79,9 +79,7 @@ impl BackgroundTask for StaleRemover {
                 }
             }
 
-            let _ = entry
-                .delete(&self.ctx.data_ref::<Data>().database.pool)
-                .await;
+            let _ = entry.delete(&self.ctx.data_ref::<Data>().pool).await;
         }
     }
 

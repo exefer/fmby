@@ -33,7 +33,11 @@ sea-orm = { version = "1.1.14", default-features = false, features = [
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.49.0", features = [
+  "macros",
+  "rt-multi-thread",
+  "signal",
+] }
 tracing = "0.1.44"
 url = "2.5.8"
 
@@ -50,6 +54,7 @@ fmby_entities = { path = "fmby_entities" }
 fmby_events = { path = "fmby_events" }
 fmby_migrations = { path = "fmby_migrations" }
 poise.workspace = true
+sea-orm.workspace = true
 tokio.workspace = true
 tracing-subscriber = "0.3.22"
 

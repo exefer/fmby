@@ -1,6 +1,5 @@
 pub mod background_task;
 pub mod constants;
-pub mod database;
 pub mod drama;
 pub mod error;
 pub mod rss;

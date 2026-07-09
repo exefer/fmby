@@ -23,7 +23,7 @@ pub struct RssScheduler {
 
 impl RssScheduler {
     pub fn new(ctx: Context) -> Self {
-        let rss_manager = RssManager::new(ctx.data::<Data>().database.pool.clone());
+        let rss_manager = RssManager::new(ctx.data::<Data>().pool.clone());
         Self { ctx, rss_manager }
     }
 

@@ -7,7 +7,7 @@ use crate::{Command, Context, Error};
 /// Executes a raw SQL command and replies with the number of affected rows or an error
 #[poise::command(prefix_command, owners_only)]
 pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
-    match ctx.data().database.pool.execute_unprepared(&sql).await {
+    match ctx.data().pool.execute_unprepared(&sql).await {
         Ok(result) => {
             ctx.reply(format!("Rows affected: {}", result.rows_affected()))
                 .await?;
@@ -25,7 +25,6 @@ pub async fn sql_exec(ctx: Context<'_>, sql: String) -> Result<(), Error> {
 pub async fn sql_query(ctx: Context<'_>, sql: String, #[flag] pretty: bool) -> Result<(), Error> {
     match ctx
         .data()
-        .database
         .pool
         .query_all(Statement::from_string(
             sea_orm::DatabaseBackend::Postgres,

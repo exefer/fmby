@@ -58,7 +58,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
 
     let status = infer_wiki_url_status(message.channel_id.get());
 
-    if let Some(entries) = get_wiki_urls_by_urls(&urls, &ctx.data::<Data>().database.pool).await {
+    if let Some(entries) = get_wiki_urls_by_urls(&urls, &ctx.data::<Data>().pool).await {
         if !entries.is_empty() {
             match status {
                 Some(WikiUrlStatus::Added | WikiUrlStatus::Removed) => {
@@ -66,7 +66,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         entries,
                         message,
                         status.unwrap(),
-                        &ctx.data::<Data>().database.pool,
+                        &ctx.data::<Data>().pool,
                     )
                     .await;
                 }
@@ -77,18 +77,22 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                         && thread.total_message_sent == 0
                         && !entries.iter().any(|e| {
                             e.status != WikiUrlStatus::Pending
-                                || !e.channel_id.is_some_and(|cid|
-                                    matches!(cid as u64, FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS))
+                                || !e.channel_id.is_some_and(|cid| {
+                                    matches!(
+                                        cid as u64,
+                                        FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS
+                                    )
+                                })
                         })
                     {
-                            update_wiki_urls_with_message(
-                                entries,
-                                message,
-                                WikiUrlStatus::Pending,
-                                &ctx.data::<Data>().database.pool,
-                            )
-                            .await;
-                            return;
+                        update_wiki_urls_with_message(
+                            entries,
+                            message,
+                            WikiUrlStatus::Pending,
+                            &ctx.data::<Data>().pool,
+                        )
+                        .await;
+                        return;
                     }
 
                     let should_proceed = status.is_some()
@@ -147,7 +151,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                 status: Set(status),
                 ..Default::default()
             }))
-            .exec(&ctx.data::<Data>().database.pool)
+            .exec(&ctx.data::<Data>().pool)
             .await;
         }
     }

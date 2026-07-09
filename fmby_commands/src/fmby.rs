@@ -274,7 +274,7 @@ pub async fn migrate(
 
     while !entries.is_empty() {
         let chunk: Vec<_> = entries.drain(..chunk_size.min(entries.len())).collect();
-        let txn = ctx.data().database.pool.begin().await?;
+        let txn = ctx.data().pool.begin().await?;
 
         let _ = WikiUrls::insert_many(chunk)
             .on_conflict(
@@ -345,7 +345,7 @@ async fn autocomplete_url<'a>(
         .limit(25)
         .order_by_asc(wiki_urls::Column::Url)
         .into_tuple()
-        .all(&ctx.data().database.pool)
+        .all(&ctx.data().pool)
         .await
         .unwrap_or_default();
 
@@ -365,7 +365,7 @@ pub async fn context(
 ) -> Result<(), Error> {
     if let Some(entry) = WikiUrls::find()
         .filter(wiki_urls::Column::Url.eq(url))
-        .one(&ctx.data().database.pool)
+        .one(&ctx.data().pool)
         .await?
     {
         let context = match (entry.guild_id, entry.channel_id, entry.message_id) {
@@ -441,7 +441,7 @@ pub async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
             FmhyChannel::NSFW_REMOVED,
         ]))
         .order_by_desc(wiki_urls::Column::UpdatedAt)
-        .all(&ctx.data().database.pool)
+        .all(&ctx.data().pool)
         .await?;
     let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
         .await?

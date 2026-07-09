@@ -1,6 +1,10 @@
+use std::env;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::time::Instant;
 
 use poise::serenity_prelude::{self as serenity, GatewayIntents};
+use sea_orm::{ConnectOptions, Database};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -29,7 +33,7 @@ async fn main() {
 
     let framework = poise::Framework::new(options);
 
-    let token = serenity::Token::from_env("FMBY_TOKEN").expect("FMBY_TOKEN is not set.");
+    let token = serenity::Token::from_env("BOT_TOKEN").expect("BOT_TOKEN is not set");
     let intents = GatewayIntents::MESSAGE_CONTENT
         | GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MESSAGES
@@ -37,13 +41,23 @@ async fn main() {
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::DIRECT_MESSAGE_REACTIONS;
 
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set.");
+    let mut conn_opts = ConnectOptions::new(database_url);
+    conn_opts
+        .min_connections(1)
+        .max_connections(5)
+        .sqlx_logging(false);
+    let pool = Database::connect(conn_opts)
+        .await
+        .expect("Failed to connect to database!");
+
     let client = serenity::Client::builder(token, intents)
         .framework(Box::new(framework))
         .event_handler(Arc::new(fmby_events::Handler))
         .data(Arc::new(fmby_core::structs::Data {
-            time_started: std::time::Instant::now(),
-            has_started: std::sync::atomic::AtomicBool::new(false),
-            database: fmby_core::database::FmbyDatabase::init().await,
+            time_started: Instant::now(),
+            has_started: AtomicBool::new(false),
+            pool,
             rss_config: fmby_core::rss::RssConfig::default(),
             drama_config: fmby_core::drama::DramaConfig::from_config(),
         }))

@@ -39,7 +39,7 @@ async fn autocomplete_name<'a>(
         .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().map(|g| g.get())))
         .limit(25)
         .into_tuple()
-        .all(&ctx.data().database.pool)
+        .all(&ctx.data().pool)
         .await
         .unwrap_or_default();
 
@@ -82,7 +82,7 @@ pub async fn add(
                 ..Default::default()
             };
 
-            feed.insert(&ctx.data().database.pool).await?;
+            feed.insert(&ctx.data().pool).await?;
 
             ctx.reply(format!(
                 "Successfully added `{}` RSS Feed with URL <{}>!",
@@ -113,7 +113,7 @@ pub async fn remove(
 ) -> Result<(), Error> {
     if let Some(uuid) = parse_uuid_or_reply(&ctx, &name).await {
         let feed = RssFeeds::delete_by_id(uuid)
-            .exec_with_returning(&ctx.data().database.pool)
+            .exec_with_returning(&ctx.data().pool)
             .await?
             .into_iter()
             .next()
@@ -142,7 +142,7 @@ pub async fn rename(
         let feed = RssFeeds::update_many()
             .col_expr(rss_feeds::Column::Name, Expr::value(new_name))
             .filter(rss_feeds::Column::Id.eq(uuid))
-            .exec_with_returning(&ctx.data().database.pool)
+            .exec_with_returning(&ctx.data().pool)
             .await?
             .into_iter()
             .next()
@@ -167,7 +167,7 @@ pub async fn list(
     let feeds = RssFeeds::find()
         .filter(rss_feeds::Column::ChannelId.eq(ctx.channel_id().get()))
         .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().unwrap().get()))
-        .all(&ctx.data().database.pool)
+        .all(&ctx.data().pool)
         .await?;
 
     let content = if feeds.is_empty() {
