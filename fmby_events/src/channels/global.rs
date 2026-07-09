@@ -71,6 +71,26 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                     .await;
                 }
                 Some(WikiUrlStatus::Pending) | None => {
+                    if status.is_none()
+                        && let Ok(Channel::GuildThread(thread)) = message.channel(&ctx.http).await
+                        && thread.parent_id.get() == FmhyChannel::LINK_TESTING
+                        && thread.total_message_sent == 0
+                        && !entries.iter().any(|e| {
+                            e.status != WikiUrlStatus::Pending
+                                || !e.channel_id.is_some_and(|cid|
+                                    matches!(cid as u64, FmhyChannel::ADD_LINKS | FmhyChannel::NSFW_ADD_LINKS))
+                        })
+                    {
+                            update_wiki_urls_with_message(
+                                entries,
+                                message,
+                                WikiUrlStatus::Pending,
+                                &ctx.data::<Data>().database.pool,
+                            )
+                            .await;
+                            return;
+                    }
+
                     let should_proceed = status.is_some()
                         || message.channel_id.get() == FmhyChannel::FEEDBACK
                         || matches!(
@@ -81,7 +101,7 @@ pub async fn on_message(ctx: &Context, message: &Message) {
                                     FmhyChannel::ADD_LINKS
                                         | FmhyChannel::NSFW_ADD_LINKS
                                         | FmhyChannel::LINK_TESTING
-                                ) && thread.total_message_sent > 0
+                                )
                         );
 
                     if !should_proceed {
