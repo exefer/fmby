@@ -1,6 +1,10 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::background_task::BackgroundTask;
+use crate::error::Error;
+use crate::rss::{RssFetcher, RssManager};
+use crate::structs::Data;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
@@ -9,10 +13,6 @@ use poise::serenity_prelude::{
     async_trait, futures,
 };
 use sea_orm::TryIntoModel;
-use crate::background_task::BackgroundTask;
-use crate::error::Error;
-use crate::rss::{RssFetcher, RssManager};
-use crate::structs::Data;
 
 pub struct RssScheduler {
     ctx: Context,
@@ -73,6 +73,34 @@ impl RssScheduler {
         }
 
         let max_entries = data.rss_config.settings.max_entries_per_check;
+
+        let entries: Vec<_> = if self
+            .rss_manager
+            .get_feed_entry_count(feed.id)
+            .await
+            .unwrap_or(0)
+            == 0
+        {
+            entries.into_iter().take(max_entries).collect()
+        } else {
+            let cutoff = self
+                .rss_manager
+                .get_oldest_entry_published_at(feed.id)
+                .await
+                .unwrap_or(None);
+
+            if let Some(cutoff) = cutoff {
+                entries
+                    .into_iter()
+                    .filter(|e| match e.published_at.as_ref() {
+                        Some(date) => *date > cutoff,
+                        None => true,
+                    })
+                    .collect()
+            } else {
+                entries
+            }
+        };
 
         let entries_to_post: Vec<_> = if data.rss_config.settings.debug_force_post {
             entries

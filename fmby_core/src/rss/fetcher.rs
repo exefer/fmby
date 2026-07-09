@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, prelude::*, sqlx::types::chrono::Utc};
+
 use crate::rss::RssConfig;
 
 pub struct RssFetcher {

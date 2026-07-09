@@ -1,5 +1,6 @@
 use fmby_entities::sea_orm_active_enums::RssFeedStatus;
 use fmby_entities::{prelude::*, rss_feed_entries, rss_feeds};
+use sea_orm::prelude::DateTimeWithTimeZone;
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{QueryOrder, prelude::*};
 
@@ -85,6 +86,29 @@ impl RssManager {
             .await?;
 
         Ok(())
+    }
+
+    pub async fn get_feed_entry_count(&self, feed_id: Uuid) -> Result<u64, DbErr> {
+        let count = RssFeedEntries::find()
+            .filter(rss_feed_entries::Column::FeedId.eq(feed_id))
+            .count(&self.pool)
+            .await?;
+
+        Ok(count)
+    }
+
+    pub async fn get_oldest_entry_published_at(
+        &self,
+        feed_id: Uuid,
+    ) -> Result<Option<DateTimeWithTimeZone>, DbErr> {
+        let entry = RssFeedEntries::find()
+            .filter(rss_feed_entries::Column::FeedId.eq(feed_id))
+            .filter(rss_feed_entries::Column::PublishedAt.is_not_null())
+            .order_by_asc(rss_feed_entries::Column::PublishedAt)
+            .one(&self.pool)
+            .await?;
+
+        Ok(entry.and_then(|e| e.published_at))
     }
 
     pub async fn insert_feed_entries(
