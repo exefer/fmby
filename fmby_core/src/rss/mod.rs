@@ -48,7 +48,7 @@ impl Default for RssConfig {
             },
             embed: RssEmbedConfig {
                 color: 0x00D4AA,
-                max_description_length: 300,
+                max_description_length: 400,
             },
         }
     }
