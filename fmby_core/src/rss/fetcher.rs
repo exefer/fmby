@@ -5,8 +5,6 @@ use anyhow::anyhow;
 use fmby_entities::{rss_feed_entries, rss_feeds};
 use regex::Regex;
 use sea_orm::{ActiveValue::*, prelude::*, sqlx::types::chrono::Utc};
-use tracing::{debug, info};
-
 use crate::rss::RssConfig;
 
 pub struct RssFetcher {
@@ -28,8 +26,6 @@ impl RssFetcher {
         &self,
         feed: &rss_feeds::Model,
     ) -> anyhow::Result<Vec<rss_feed_entries::ActiveModel>> {
-        debug!("Starting feed retrieval for: {} at {}", feed.name, feed.url);
-
         let response = self.client.get(&feed.url).send().await?;
 
         if !response.status().is_success() {
@@ -43,15 +39,6 @@ impl RssFetcher {
         let content = response.text().await?;
         let parsed_feed = feed_rs::parser::parse(content.as_bytes())
             .map_err(|e| anyhow!("Feed parsing error: {}", e))?;
-
-        info!(
-            "Successfully parsed '{}' containing {} entries",
-            parsed_feed
-                .title
-                .as_ref()
-                .map_or("Unnamed feed", |t| t.content.as_str()),
-            parsed_feed.entries.len()
-        );
 
         let mut entries: Vec<_> = parsed_feed
             .entries
@@ -156,8 +143,6 @@ impl RssFetcher {
     }
 
     pub async fn validate_feed_url(&self, url: &str) -> anyhow::Result<String> {
-        debug!("Validating feed URL: {}", url);
-
         let response = self.client.get(url).send().await?;
 
         if !response.status().is_success() {

@@ -9,8 +9,6 @@ use poise::serenity_prelude::{
     async_trait, futures,
 };
 use sea_orm::TryIntoModel;
-use tracing::{error, info, warn};
-
 use crate::background_task::BackgroundTask;
 use crate::error::Error;
 use crate::rss::{RssFetcher, RssManager};
@@ -34,8 +32,6 @@ impl RssScheduler {
             return Ok(());
         }
 
-        info!("Processing {} RSS feeds for new content", feeds.len());
-
         let semaphore = Arc::new(tokio::sync::Semaphore::new(
             self.ctx
                 .data_ref::<Data>()
@@ -57,49 +53,28 @@ impl RssScheduler {
             tasks.push(task);
         }
 
-        while let Some(result) = tasks.next().await {
-            if let Err(e) = result {
-                error!("RSS feed check failed: {}", e);
-            }
-        }
+        while tasks.next().await.is_some() {}
 
         Ok(())
     }
 
     async fn check_single_feed(&self, feed: rss_feeds::Model) -> Result<(), Error> {
-        info!("Fetching RSS feed '{}' at {}", feed.name, feed.url);
-
-        if let Err(e) = self.rss_manager.update_last_checked_at(feed.id).await {
-            warn!(
-                "Failed to update last_checked_at for feed {}: {}",
-                feed.id, e
-            );
-        }
+        let _ = self.rss_manager.update_last_checked_at(feed.id).await;
 
         let data = self.ctx.data_ref::<Data>();
         let fetcher = RssFetcher::new(&data.rss_config);
 
-        let entries = match fetcher.fetch_feed(&feed).await {
-            Ok(entries) => entries,
-            Err(e) => {
-                warn!("Unable to retrieve RSS feed '{}': {}", feed.name, e);
-                return Ok(());
-            }
+        let Ok(entries) = fetcher.fetch_feed(&feed).await else {
+            return Ok(());
         };
 
         if entries.is_empty() {
-            info!("RSS feed '{}' contains no entries", feed.name);
             return Ok(());
         }
 
         let max_entries = data.rss_config.settings.max_entries_per_check;
 
         let entries_to_post: Vec<_> = if data.rss_config.settings.debug_force_post {
-            info!(
-                "DEBUG MODE: Force-posting {} entries from '{}' (may include previously processed items)",
-                entries.len().min(max_entries),
-                feed.name
-            );
             entries
                 .into_iter()
                 .filter_map(|e| e.try_into_model().ok())
@@ -111,17 +86,8 @@ impl RssScheduler {
         } else {
             let new_entries = self.rss_manager.insert_feed_entries(entries).await?;
             if new_entries.is_empty() {
-                info!(
-                    "All entries from '{}' have been previously processed",
-                    feed.name
-                );
                 return Ok(());
             }
-            info!(
-                "Discovered {} fresh entries in RSS feed '{}'",
-                new_entries.len(),
-                feed.name
-            );
             new_entries.into_iter().take(max_entries).rev().collect()
         };
 
@@ -175,18 +141,10 @@ impl RssScheduler {
             .send_message(&self.ctx.http, CreateMessage::new().add_embed(embed))
             .await?;
 
-        if let Err(e) = self
+        let _ = self
             .rss_manager
             .update_entry_message_id(entry.id, message.id.get())
-            .await
-        {
-            warn!("Could not store message ID for RSS feed entry: {}", e);
-        }
-
-        info!(
-            "Successfully delivered RSS feed entry '{}' to channel {}",
-            entry.title, feed.channel_id
-        );
+            .await;
 
         Ok(())
     }
@@ -203,9 +161,7 @@ impl BackgroundTask for RssScheduler {
     }
 
     async fn run(&mut self) {
-        if let Err(e) = self.check_all_feeds().await {
-            error!("Error in RSS scheduler: {}", e);
-        }
+        let _ = self.check_all_feeds().await;
     }
 
     fn timeout(&mut self) -> Option<Duration> {
