@@ -300,32 +300,48 @@ pub async fn migrate(
 pub async fn search(
     ctx: Context<'_>,
     #[description = "The term or phrase you want to search for in the wiki"] query: String,
+    #[description = "The number of results to skip from the start (default is 0)"]
+    #[min = 0]
+    offset: Option<u16>,
     #[description = "The maximum number of search results to return (default is 10)"]
     #[min = 1]
     #[max = 25]
     limit: Option<u8>,
 ) -> Result<(), Error> {
-    let result: String = fmby_core::utils::wiki::search_in_wiki(&query)
+    let results = fmby_core::utils::wiki::search_in_wiki(&query)
         .await
-        .unwrap()
-        .into_iter()
-        .take(limit.unwrap_or(10) as usize)
-        .map(|s| format!("- {}", s))
-        .collect::<Vec<_>>()
-        .join("\n");
+        .unwrap();
 
-    ctx.send(
-        CreateReply::new().embed(
-            CreateEmbed::new()
-                .title(format!("Search results for `{}`", query))
-                .description(if result.is_empty() {
-                    "Nothing found."
-                } else {
-                    &result
-                }),
-        ),
-    )
-    .await?;
+    let total = results.len();
+    let offset = offset.unwrap_or(0) as usize;
+    let limit = limit.unwrap_or(10) as usize;
+
+    let shown: Vec<_> = results.into_iter().skip(offset).take(limit).collect();
+
+    let description = if shown.is_empty() {
+        "Nothing found.".to_owned()
+    } else {
+        shown
+            .iter()
+            .map(|s| format!("- {}", s))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let mut embed = CreateEmbed::new()
+        .title(format!("Search results for `{}`", query))
+        .description(&description);
+
+    if !shown.is_empty() {
+        embed = embed.footer(CreateEmbedFooter::new(format!(
+            "Results {}-{} of {}",
+            offset + 1,
+            offset + shown.len(),
+            total
+        )));
+    }
+
+    ctx.send(CreateReply::new().embed(embed)).await?;
 
     Ok(())
 }
