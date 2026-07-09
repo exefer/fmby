@@ -32,7 +32,7 @@ impl BackgroundTask for StaleRemover {
     }
 
     async fn run(&mut self) {
-        if let Ok(entries) = WikiUrls::find()
+        let Ok(entries) = WikiUrls::find()
             .filter(wiki_urls::Column::Status.eq(WikiUrlStatus::Pending))
             .filter(
                 Expr::col(wiki_urls::Column::CreatedAt)
@@ -41,45 +41,47 @@ impl BackgroundTask for StaleRemover {
             .order_by_asc(wiki_urls::Column::CreatedAt)
             .all(&self.ctx.data_ref::<Data>().database.pool)
             .await
-        {
-            for entry in entries {
-                let (Some(cid), Some(mid)) = (entry.channel_id, entry.message_id) else {
-                    continue;
-                };
-                let (cid, mid) = (cid as u64, mid as u64);
+        else {
+            return;
+        };
 
-                if cid == FmhyChannel::ADD_LINKS
-                    && self
-                        .ctx
-                        .http
-                        .get_message(GenericChannelId::new(cid), MessageId::new(mid))
-                        .await
-                        .is_ok()
-                {
-                    continue;
-                }
+        for entry in entries {
+            let (Some(cid), Some(mid)) = (entry.channel_id, entry.message_id) else {
+                continue;
+            };
+            let (cid, mid) = (cid as u64, mid as u64);
 
-                if cid != FmhyChannel::ADD_LINKS
-                    && let Ok(Channel::GuildThread(thread)) =
-                        self.ctx.http.get_channel(GenericChannelId::new(cid)).await
-                {
-                    if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
-                        continue;
-                    }
-
-                    if !thread
-                        .applied_tags
-                        .iter()
-                        .any(|t| matches!(t.get(), ForumTag::ADDED | ForumTag::REJECTED))
-                    {
-                        continue;
-                    }
-                }
-
-                let _ = entry
-                    .delete(&self.ctx.data_ref::<Data>().database.pool)
-                    .await;
+            if cid == FmhyChannel::ADD_LINKS
+                && self
+                    .ctx
+                    .http
+                    .get_message(GenericChannelId::new(cid), MessageId::new(mid))
+                    .await
+                    .is_ok()
+            {
+                continue;
             }
+
+            if cid != FmhyChannel::ADD_LINKS
+                && let Ok(Channel::GuildThread(thread)) =
+                    self.ctx.http.get_channel(GenericChannelId::new(cid)).await
+            {
+                if thread.parent_id.get() != FmhyChannel::LINK_TESTING {
+                    continue;
+                }
+
+                if !thread
+                    .applied_tags
+                    .iter()
+                    .any(|t| matches!(t.get(), ForumTag::ADDED | ForumTag::REJECTED))
+                {
+                    continue;
+                }
+            }
+
+            let _ = entry
+                .delete(&self.ctx.data_ref::<Data>().database.pool)
+                .await;
         }
     }
 
