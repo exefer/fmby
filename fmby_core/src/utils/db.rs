@@ -16,11 +16,7 @@ where
 {
     fn chunk_size() -> usize {
         let num_columns = E::Column::iter().count() as u16;
-        if num_columns == 0 {
-            0
-        } else {
-            (u16::MAX / num_columns) as usize
-        }
+        u16::MAX.checked_div(num_columns).unwrap_or(0) as usize
     }
 }
 
