@@ -9,6 +9,7 @@ mod error;
 mod events;
 mod formatters;
 mod message;
+mod migration;
 mod rss;
 mod stale_remover;
 mod types;
@@ -20,8 +21,10 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::time::Instant;
 
+use migration::Migrator;
 use poise::serenity_prelude::{self as serenity, GatewayIntents};
-use sea_orm::{ConnectOptions, Database, DatabaseBackend, Schema};
+use sea_orm::{ConnectOptions, Database};
+use sea_orm_migration::MigratorTraitSelf;
 use tracing_subscriber::EnvFilter;
 
 #[cfg(unix)]
@@ -99,14 +102,10 @@ async fn main() {
         .await
         .expect("Failed to connect to database!");
 
-    Schema::new(DatabaseBackend::Postgres)
-        .builder()
-        .register(entities::rss_feeds::Entity)
-        .register(entities::rss_feed_entries::Entity)
-        .register(entities::wiki_urls::Entity)
-        .sync(&pool)
+    Migrator
+        .up(&pool, None)
         .await
-        .expect("Failed to sync database schema!");
+        .expect("Failed to run database migrations!");
 
     let mut client = serenity::Client::builder(token, intents)
         .framework(Box::new(framework))

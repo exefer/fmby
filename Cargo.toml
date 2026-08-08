@@ -26,6 +26,17 @@ reqwest = { version = "0.13.4", default-features = false, features = [
   "rustls-no-provider",
 ] }
 rustls = { version = "0.23.43", default-features = false, features = ["ring"] }
+sea-orm = { version = "2.0.1", default-features = false, features = [
+  "macros",
+  "runtime-tokio-rustls",
+  "sqlx-postgres",
+  "with-chrono",
+  "with-json",
+  "with-uuid",
+] }
+sea-orm-migration = "2.0.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 serenity = { git = "https://github.com/serenity-rs/serenity", branch = "next", default-features = false, features = [
   "builder",
   "gateway",
@@ -35,17 +46,7 @@ serenity = { git = "https://github.com/serenity-rs/serenity", branch = "next", d
   "framework",
   "rustls_backend_no_provider",
 ] }
-sea-orm = { version = "2.0.1", default-features = false, features = [
-  "macros",
-  "runtime-tokio-rustls",
-  "sqlx-postgres",
-  "with-chrono",
-  "with-json",
-  "with-uuid",
-  "schema-sync",
-] }
-serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
+thiserror = "2"
 tokio = { version = "1.53.1", features = [
   "macros",
   "rt-multi-thread",
@@ -53,7 +54,6 @@ tokio = { version = "1.53.1", features = [
 ] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
-thiserror = "2"
 url = "2.5.8"
 wordcloud-rs = { version = "0.1.17", default-features = false }
 
