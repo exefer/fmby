@@ -1,9 +1,0 @@
-[package]
-name = "fmby_entities"
-version = "0.1.0"
-edition = "2024"
-publish = false
-
-[dependencies]
-sea-orm = { workspace = true }
-serde = { workspace = true }

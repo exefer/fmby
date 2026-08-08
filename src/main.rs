@@ -1,14 +1,31 @@
+mod background_task;
+mod channels;
+mod commands;
+mod constants;
+mod db;
+mod drama;
+mod entities;
+mod error;
+mod events;
+mod formatters;
+mod message;
+mod rss;
+mod stale_remover;
+mod types;
+mod url;
+mod wiki;
+
 use std::env;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::time::Instant;
 
 use poise::serenity_prelude::{self as serenity, GatewayIntents};
-use sea_orm::{ConnectOptions, Database};
+use sea_orm::{ConnectOptions, Database, DatabaseBackend, Schema};
 use tracing_subscriber::EnvFilter;
 
 #[cfg(unix)]
-pub async fn shutdown_signal() {
+async fn shutdown_signal() {
     use tokio::signal::unix::{SignalKind, signal};
 
     let (mut s1, mut s2, mut s3) = (
@@ -25,7 +42,7 @@ pub async fn shutdown_signal() {
 }
 
 #[cfg(windows)]
-pub async fn shutdown_signal() {
+async fn shutdown_signal() {
     use tokio::signal::windows;
 
     let (mut s1, mut s2) = (windows::ctrl_c().unwrap(), windows::ctrl_break().unwrap());
@@ -46,8 +63,10 @@ async fn main() {
 
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     let options = poise::FrameworkOptions {
-        commands: fmby_commands::commands(),
+        commands: commands::commands(),
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(r"\".into()),
             mention_as_prefix: true,
@@ -80,15 +99,24 @@ async fn main() {
         .await
         .expect("Failed to connect to database!");
 
+    Schema::new(DatabaseBackend::Postgres)
+        .builder()
+        .register(entities::rss_feeds::Entity)
+        .register(entities::rss_feed_entries::Entity)
+        .register(entities::wiki_urls::Entity)
+        .sync(&pool)
+        .await
+        .expect("Failed to sync database schema!");
+
     let mut client = serenity::Client::builder(token, intents)
         .framework(Box::new(framework))
-        .event_handler(Arc::new(fmby_events::Handler))
-        .data(Arc::new(fmby_core::structs::Data {
+        .event_handler(Arc::new(events::Handler))
+        .data(Arc::new(types::Data {
             time_started: Instant::now(),
             has_started: AtomicBool::new(false),
             pool,
-            rss_config: fmby_core::rss::RssConfig::default(),
-            drama_config: fmby_core::drama::DramaConfig::from_config(),
+            rss_config: rss::RssConfig::default(),
+            drama_config: drama::DramaConfig::from_config(),
         }))
         .await
         .expect("failed to create client");
