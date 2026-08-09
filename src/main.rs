@@ -25,7 +25,6 @@ use migration::Migrator;
 use poise::serenity_prelude::{self as serenity, GatewayIntents};
 use sea_orm::{ConnectOptions, Database};
 use sea_orm_migration::MigratorTraitSelf;
-use tracing_subscriber::EnvFilter;
 
 #[cfg(unix)]
 async fn shutdown_signal() {
@@ -60,11 +59,7 @@ async fn shutdown_signal() {
 async fn main() {
     let _ = dotenvy::dotenv();
 
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"))
-        .add_directive("wordcloud=off".parse().unwrap());
-
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    tracing_subscriber::fmt().init();
 
     let _ = rustls::crypto::ring::default_provider().install_default();
 

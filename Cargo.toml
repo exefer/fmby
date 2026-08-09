@@ -57,6 +57,9 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 url = "2.5.8"
 wordcloud-rs = { version = "0.1.17", default-features = false }
 
+[patch.crates-io]
+wordcloud-rs = { git = "https://github.com/exefer/wordcloud-rs" }
+
 [profile.release]
 opt-level = "s"
 strip = true
