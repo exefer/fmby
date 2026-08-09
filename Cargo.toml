@@ -19,7 +19,7 @@ poise = { git = "https://github.com/serenity-rs/poise", branch = "serenity-next"
   "handle_panics",
 ] }
 pulldown-cmark = { version = "0.13.4", default-features = false }
-rand = "0.9.2"
+rand = "0.10.2"
 regex = "1.13.1"
 reqwest = { version = "0.13.4", default-features = false, features = [
   "json",
