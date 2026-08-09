@@ -33,7 +33,7 @@ async fn autocomplete_name<'a>(
         .select_only()
         .columns([rss_feeds::Column::Name, rss_feeds::Column::Id])
         .apply_if((!partial.is_empty()).then_some(()), |query, _| {
-            query.filter(rss_feeds::Column::Name.ilike(format!("%{}%", partial)))
+            query.filter(rss_feeds::Column::Name.ilike(format!("%{partial}%")))
         })
         .filter(rss_feeds::Column::GuildId.eq(ctx.guild_id().map(|g| g.get())))
         .limit(25)
@@ -83,8 +83,7 @@ async fn add(
         feed.insert(&ctx.data().pool).await?;
 
         ctx.reply(format!(
-            "Successfully added `{}` RSS Feed with URL <{}>!",
-            name, url
+            "Successfully added `{name}` RSS Feed with URL <{url}>!"
         ))
         .await?;
     } else {
@@ -197,7 +196,7 @@ async fn fetch_feed_title(ctx: Context<'_>, url: String) -> Result<(), Error> {
     let fetcher = RssFetcher::new(&RssConfig::default());
 
     let content = match fetcher.validate_feed_url(&url).await {
-        Ok(title) => format!("The feed title is: {}", title),
+        Ok(title) => format!("The feed title is: {title}"),
         Err(e) => e.to_string(),
     };
 

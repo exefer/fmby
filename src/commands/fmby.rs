@@ -231,13 +231,11 @@ async fn migrate(
                                     false,
                                 ),
                                 ("URLs processed", urls_processed.to_string(), false),
-                                ("Current channel", format!("<#{}>", channel_id), false),
+                                ("Current channel", format!("<#{channel_id}>"), false),
                                 (
                                     "Next channel",
-                                    next_channel_id.map_or_else(
-                                        || "None".to_owned(),
-                                        |id| format!("<#{}>", id),
-                                    ),
+                                    next_channel_id
+                                        .map_or_else(|| "None".to_owned(), |id| format!("<#{id}>")),
                                     false,
                                 ),
                                 ("Time elapsed", format!("{:.2?}", start.elapsed()), false),
@@ -322,13 +320,13 @@ async fn search(
     } else {
         shown
             .iter()
-            .map(|s| format!("- {}", s))
+            .map(|s| format!("- {s}"))
             .collect::<Vec<_>>()
             .join("\n")
     };
 
     let mut embed = CreateEmbed::new()
-        .title(format!("Search results for `{}`", query))
+        .title(format!("Search results for `{query}`"))
         .description(&description);
 
     if !shown.is_empty() {
@@ -383,10 +381,7 @@ async fn context(
     {
         let context = match (entry.guild_id, entry.channel_id, entry.message_id) {
             (Some(guild_id), Some(channel_id), Some(message_id)) => {
-                format!(
-                    "https://discord.com/channels/{}/{}/{}",
-                    guild_id, channel_id, message_id
-                )
+                format!("https://discord.com/channels/{guild_id}/{channel_id}/{message_id}")
             }
             _ => "Unavailable".to_owned(),
         };
@@ -398,10 +393,9 @@ async fn context(
                         .field("URL", entry.url, false)
                         .field(
                             "Updated By",
-                            entry.user_id.map_or_else(
-                                || "Unavailable".to_owned(),
-                                |id| format!("<@{}>", id),
-                            ),
+                            entry
+                                .user_id
+                                .map_or_else(|| "Unavailable".to_owned(), |id| format!("<@{id}>")),
                             false,
                         )
                         .field("Context", context, false)
@@ -491,7 +485,7 @@ async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
     for chunk in added_not_in_wiki.chunks(50) {
         let description = chunk
             .iter()
-            .map(|url| format!("- {}", url))
+            .map(|url| format!("- {url}"))
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -506,7 +500,7 @@ async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
     for chunk in in_wiki_not_added.chunks(50) {
         let description = chunk
             .iter()
-            .map(|url| format!("- {}", url))
+            .map(|url| format!("- {url}"))
             .collect::<Vec<_>>()
             .join("\n");
 

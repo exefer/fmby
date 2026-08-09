@@ -93,10 +93,7 @@ impl RssScheduler {
             if let Some(cutoff) = cutoff {
                 entries
                     .into_iter()
-                    .filter(|e| match e.published_at.as_ref() {
-                        Some(date) => *date > cutoff,
-                        None => true,
-                    })
+                    .filter(|e| e.published_at.as_ref().is_none_or(|date| date > cutoff))
                     .collect()
             } else {
                 entries

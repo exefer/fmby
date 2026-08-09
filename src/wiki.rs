@@ -31,7 +31,7 @@ pub async fn search_in_wiki(query: &str) -> anyhow::Result<Vec<String>> {
                 current_headings.push(heading_text);
                 heading_path = current_headings
                     .iter()
-                    .map(|s| format!("**{}**", s))
+                    .map(|s| format!("**{s}**"))
                     .collect::<Vec<_>>()
                     .join(" / ");
             }

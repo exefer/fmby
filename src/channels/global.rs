@@ -16,7 +16,7 @@ use crate::types::Data;
 use crate::url::extract_urls;
 
 pub async fn on_message(ctx: &Context, message: &Message) {
-    for (channel_id, needle) in AUTO_THREAD_MAPPINGS.iter() {
+    for (channel_id, needle) in AUTO_THREAD_MAPPINGS {
         if message.channel_id.get() == *channel_id
             && needle.is_none_or(|n| message.content.contains(n))
         {

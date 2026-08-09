@@ -29,16 +29,12 @@ pub async fn on_thread_update(ctx: &Context, old: Option<&GuildThread>, new: &Gu
     ] {
         for tag in tags {
             let content = match (tag.get(), closing) {
-                (ForumTag::REJECTED, true) => {
-                    Some(format!("{}: thread closed as rejected.", owner))
-                }
+                (ForumTag::REJECTED, true) => Some(format!("{owner}: thread closed as rejected.")),
                 (ForumTag::ADDED, true) => Some(format!(
-                    "{}: thread closed as approved; links will be added to the wiki.",
-                    owner
+                    "{owner}: thread closed as approved; links will be added to the wiki."
                 )),
                 (ForumTag::REJECTED, false) => Some(format!(
-                    "{}: your previously rejected thread has been reopened; feel free to continue discussing and defending the links you were testing.",
-                    owner
+                    "{owner}: your previously rejected thread has been reopened; feel free to continue discussing and defending the links you were testing."
                 )),
                 _ => None,
             };

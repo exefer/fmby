@@ -40,7 +40,7 @@ impl RssFetcher {
 
         let content = response.text().await?;
         let parsed_feed = feed_rs::parser::parse(content.as_bytes())
-            .map_err(|e| anyhow!("Feed parsing error: {}", e))?;
+            .map_err(|e| anyhow!("Feed parsing error: {e}"))?;
 
         let mut entries: Vec<_> = parsed_feed
             .entries
@@ -77,7 +77,7 @@ impl RssFetcher {
                         .title
                         .as_ref()
                         .map_or("untitled", |t| t.content.as_str());
-                    format!("{}_{}", title, timestamp)
+                    format!("{title}_{timestamp}")
                 },
                 |link| link.href.clone(),
             )
@@ -157,7 +157,7 @@ impl RssFetcher {
 
         let content = response.text().await?;
         let parsed_feed = feed_rs::parser::parse(content.as_bytes())
-            .map_err(|e| anyhow!("Feed format validation failed: {}", e))?;
+            .map_err(|e| anyhow!("Feed format validation failed: {e}"))?;
 
         Ok(parsed_feed
             .title

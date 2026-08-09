@@ -36,9 +36,9 @@ async fn sql_query(ctx: Context<'_>, sql: String, #[flag] pretty: bool) -> Resul
             let rows: Vec<_> = result.iter().filter_map(|q| q.try_as_pg_row()).collect();
 
             let formatted = if pretty {
-                format!("{:#?}", rows)
+                format!("{rows:#?}")
             } else {
-                format!("{:?}", rows)
+                format!("{rows:?}")
             };
 
             ctx.send(
