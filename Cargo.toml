@@ -2,8 +2,8 @@
 name = "fmby"
 version = "0.1.0"
 edition = "2024"
-description = "A remake of FMHY/bot"
-repository = "https://github.com/exefer/fmby"
+description = "A remake of fmhy/bot"
+repository = "https://github.com/fmhy/fmby"
 license = "GPL-3.0-or-later"
 publish = false
 

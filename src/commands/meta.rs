@@ -8,7 +8,8 @@ use super::{Command, Context, Error};
     install_context = "Guild|User"
 )]
 async fn source(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("<https://github.com/exefer/fmby>").await?;
+    ctx.say(concat!("<", env!("CARGO_PKG_REPOSITORY"), ">"))
+        .await?;
 
     Ok(())
 }
