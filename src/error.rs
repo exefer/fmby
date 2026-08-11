@@ -16,6 +16,8 @@ pub enum Error {
     #[error(transparent)]
     Database(#[from] sea_orm::DbErr),
     #[error(transparent)]
+    FeedParse(#[from] feed_rs::parser::ParseFeedError),
+    #[error(transparent)]
     Serenity(#[from] poise::serenity_prelude::Error),
     #[error(transparent)]
     Http(#[from] reqwest::Error),

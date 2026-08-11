@@ -1,12 +1,12 @@
 use std::sync::LazyLock;
 use std::time::Duration;
 
-use anyhow::anyhow;
 use regex::Regex;
 use sea_orm::sqlx::types::chrono::Utc;
 use sea_orm::{ActiveValue::*, prelude::*};
 
 use crate::entities::{rss_feed_entries, rss_feeds};
+use crate::error::Error;
 use crate::rss::RssConfig;
 
 pub struct RssFetcher {
@@ -27,20 +27,11 @@ impl RssFetcher {
     pub async fn fetch_feed(
         &self,
         feed: &rss_feeds::Model,
-    ) -> anyhow::Result<Vec<rss_feed_entries::ActiveModel>> {
-        let response = self.client.get(&feed.url).send().await?;
-
-        if !response.status().is_success() {
-            return Err(anyhow!(
-                "Request failed with status {}: {}",
-                response.status(),
-                response.status().canonical_reason().unwrap_or("Unknown")
-            ));
-        }
-
+    ) -> Result<Vec<rss_feed_entries::ActiveModel>, Error> {
+        let url = &feed.url;
+        let response = self.client.get(url).send().await?.error_for_status()?;
         let content = response.text().await?;
-        let parsed_feed = feed_rs::parser::parse(content.as_bytes())
-            .map_err(|e| anyhow!("Feed parsing error: {e}"))?;
+        let parsed_feed = feed_rs::parser::parse(content.as_bytes()).map_err(Error::FeedParse)?;
 
         let mut entries: Vec<_> = parsed_feed
             .entries
@@ -144,20 +135,10 @@ impl RssFetcher {
         }
     }
 
-    pub async fn validate_feed_url(&self, url: &str) -> anyhow::Result<String> {
-        let response = self.client.get(url).send().await?;
-
-        if !response.status().is_success() {
-            return Err(anyhow!(
-                "Validation failed - HTTP {}: {}",
-                response.status(),
-                response.status().canonical_reason().unwrap_or("Unknown")
-            ));
-        }
-
+    pub async fn validate_feed_url(&self, url: &str) -> Result<String, Error> {
+        let response = self.client.get(url).send().await?.error_for_status()?;
         let content = response.text().await?;
-        let parsed_feed = feed_rs::parser::parse(content.as_bytes())
-            .map_err(|e| anyhow!("Feed format validation failed: {e}"))?;
+        let parsed_feed = feed_rs::parser::parse(content.as_bytes()).map_err(Error::FeedParse)?;
 
         Ok(parsed_feed
             .title
