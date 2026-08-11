@@ -313,16 +313,15 @@ async fn search(
     let offset = offset.unwrap_or(0) as usize;
     let limit = limit.unwrap_or(10) as usize;
 
-    let shown: Vec<_> = results.into_iter().skip(offset).take(limit).collect();
+    let mut shown: Vec<_> = results.into_iter().skip(offset).take(limit).collect();
 
     let description = if shown.is_empty() {
         "Nothing found.".to_owned()
     } else {
-        shown
-            .iter()
-            .map(|s| format!("- {s}"))
-            .collect::<Vec<_>>()
-            .join("\n")
+        for s in &mut shown {
+            s.insert_str(0, "- ");
+        }
+        shown.join("\n")
     };
 
     let mut embed = CreateEmbed::new()
@@ -482,32 +481,28 @@ async fn inconsistencies(ctx: Context<'_>) -> Result<(), Error> {
 
     let mut embeds = Vec::new();
 
-    for chunk in added_not_in_wiki.chunks(50) {
-        let description = chunk
-            .iter()
-            .map(|url| format!("- {url}"))
-            .collect::<Vec<_>>()
-            .join("\n");
+    for chunk in added_not_in_wiki.chunks_mut(50) {
+        for url in chunk.iter_mut() {
+            url.insert_str(0, "- ");
+        }
 
         embeds.push(
             CreateEmbed::new()
                 .title("Added → Removed")
-                .description(description)
+                .description(chunk.join("\n"))
                 .color(Color::RED),
         );
     }
 
-    for chunk in in_wiki_not_added.chunks(50) {
-        let description = chunk
-            .iter()
-            .map(|url| format!("- {url}"))
-            .collect::<Vec<_>>()
-            .join("\n");
+    for chunk in in_wiki_not_added.chunks_mut(50) {
+        for url in chunk.iter_mut() {
+            url.insert_str(0, "- ");
+        }
 
         embeds.push(
             CreateEmbed::new()
                 .title("Removed/Pending → Added")
-                .description(description)
+                .description(chunk.join("\n"))
                 .color(Color::ORANGE),
         );
     }

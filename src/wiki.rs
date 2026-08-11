@@ -29,11 +29,15 @@ pub async fn search_in_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> 
                     current_headings.truncate(level - 1);
                 }
                 current_headings.push(heading_text);
-                heading_path = current_headings
-                    .iter()
-                    .map(|s| format!("**{s}**"))
-                    .collect::<Vec<_>>()
-                    .join(" / ");
+                heading_path.clear();
+                for (i, s) in current_headings.iter().enumerate() {
+                    if i > 0 {
+                        heading_path.push_str(" / ");
+                    }
+                    heading_path.push_str("**");
+                    heading_path.push_str(s);
+                    heading_path.push_str("**");
+                }
             }
             Event::Start(Tag::Item) => {
                 let line_start = range.start;
