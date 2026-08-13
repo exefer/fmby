@@ -45,7 +45,6 @@ pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
                     .find('\n')
                     .map_or(content.len(), |i| line_start + i);
                 let line = &content[line_start..line_end];
-
                 if let Some(stripped) = line.strip_prefix("* ")
                     && (query_re.is_match(stripped) || query_re.is_match(&heading_path))
                 {
@@ -54,7 +53,6 @@ pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
                     formatted_line.push_str(&heading_path);
                     formatted_line.push_str(" ► ");
                     formatted_line.push_str(stripped);
-
                     result.push(formatted_line);
                 }
             }
