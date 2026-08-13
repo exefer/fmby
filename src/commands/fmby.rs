@@ -307,7 +307,7 @@ async fn search(
     #[max = 25]
     limit: Option<u8>,
 ) -> Result<(), Error> {
-    let results = crate::wiki::search_in_wiki(&query).await?;
+    let results = crate::wiki::search_wiki(&query).await?;
 
     let total = results.len();
     let offset = offset.unwrap_or(0) as usize;

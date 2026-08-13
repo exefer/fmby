@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 
-pub async fn search_in_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
+pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
     let query = query.to_lowercase();
     let query_re = Regex::new(&format!("(?i){}", regex::escape(&query))).unwrap();
 
