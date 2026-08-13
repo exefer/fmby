@@ -1055,6 +1055,7 @@ dependencies = [
  "feed-rs",
  "futures",
  "image",
+ "itertools 0.15.0",
  "poise",
  "pulldown-cmark",
  "rand 0.10.2",

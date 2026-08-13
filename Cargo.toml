@@ -12,6 +12,7 @@ dotenvy = "0.15.7"
 feed-rs = "2.4.0"
 futures = "0.3.33"
 image = { version = "0.25.10", default-features = false, features = ["png"] }
+itertools = "0.15"
 poise = { git = "https://github.com/serenity-rs/poise", branch = "serenity-next", default-features = false, features = [
   "cache",
   "chrono",

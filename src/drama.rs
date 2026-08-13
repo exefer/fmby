@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use rand::prelude::*;
 use serde::Deserialize;
 
@@ -44,6 +45,5 @@ pub fn fill_phrase(phrase: &str, data: &DramaConfig, rng: &mut impl Rng) -> Stri
                 })
                 .unwrap_or_else(|| word.to_owned())
         })
-        .collect::<Vec<_>>()
         .join(" ")
 }

@@ -1,6 +1,7 @@
 use std::sync::LazyLock;
 use std::time::Duration;
 
+use itertools::Itertools;
 use regex::Regex;
 use sea_orm::sqlx::types::chrono::Utc;
 use sea_orm::{ActiveValue::*, prelude::*};
@@ -193,7 +194,7 @@ fn clean_html(html: &str) -> String {
     }
 
     // Normalize whitespace in the final result
-    result.split_whitespace().collect::<Vec<_>>().join(" ")
+    result.split_whitespace().join(" ")
 }
 
 static IMG_RE: LazyLock<Regex> =

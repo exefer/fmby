@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use poise::CreateReply;
 use poise::serenity_prelude::{
     AutocompleteChoice, CreateAllowedMentions, CreateAutocompleteResponse,
@@ -176,7 +177,6 @@ async fn list(
                     feed.name, feed.url, feed.created_by
                 )
             })
-            .collect::<Vec<_>>()
             .join("\n")
     };
 
