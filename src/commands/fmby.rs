@@ -210,6 +210,7 @@ async fn migrate(
             } else {
                 0.0
             };
+            let total = messages_processed + messages_skipped;
             let next_channel_id = channel_ids.get(i + 1);
 
             reply
@@ -222,11 +223,7 @@ async fn migrate(
                                 (
                                     "Messages",
                                     format!(
-                                        "Processed: {}\nSkipped: {}\nProcess rate: {:.1}% ({})",
-                                        messages_processed,
-                                        messages_skipped,
-                                        process_rate,
-                                        messages_processed + messages_skipped
+                                        "Processed: {messages_processed}\nSkipped: {messages_skipped}\nProcess rate: {process_rate:.1}% ({total})"
                                     ),
                                     false,
                                 ),
@@ -329,11 +326,10 @@ async fn search(
         .description(&description);
 
     if !shown.is_empty() && shown.len() < total {
+        let start = offset + 1;
+        let end = offset + shown.len();
         embed = embed.footer(CreateEmbedFooter::new(format!(
-            "Results {}-{} of {}",
-            offset + 1,
-            offset + shown.len(),
-            total
+            "Results {start}-{end} of {total}"
         )));
     }
 
