@@ -328,7 +328,7 @@ async fn search(
         .title(format!("Search results for `{query}`"))
         .description(&description);
 
-    if !shown.is_empty() {
+    if !shown.is_empty() && shown.len() < total {
         embed = embed.footer(CreateEmbedFooter::new(format!(
             "Results {}-{} of {}",
             offset + 1,
