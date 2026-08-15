@@ -3,7 +3,11 @@ use regex::Regex;
 
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
 
-pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
+pub async fn search_wiki(
+    query: &str,
+    offset: usize,
+    limit: usize,
+) -> Result<(Vec<String>, usize), reqwest::Error> {
     let query = query.to_lowercase();
     let query_re = Regex::new(&format!("(?i){}", regex::escape(&query))).unwrap();
 
@@ -12,7 +16,8 @@ pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
         .text()
         .await?;
 
-    let mut result = Vec::new();
+    let mut entries = Vec::new();
+    let mut matches = 0;
     let mut current_headings = Vec::new();
     let mut heading_path = String::new();
     let mut parser_iter = Parser::new(&content).into_offset_iter();
@@ -48,19 +53,23 @@ pub async fn search_wiki(query: &str) -> Result<Vec<String>, reqwest::Error> {
                 if let Some(stripped) = line.strip_prefix("* ")
                     && (query_re.is_match(stripped) || query_re.is_match(&heading_path))
                 {
-                    let mut formatted_line =
-                        String::with_capacity(heading_path.len() + stripped.len() + 3);
-                    formatted_line.push_str(&heading_path);
-                    formatted_line.push_str(" ► ");
-                    formatted_line.push_str(stripped);
-                    result.push(formatted_line);
+                    matches += 1;
+                    if matches > offset && entries.len() < limit {
+                        let mut entry =
+                            String::with_capacity(heading_path.len() + stripped.len() + 5);
+                        entry.push_str("- ");
+                        entry.push_str(&heading_path);
+                        entry.push_str(" ► ");
+                        entry.push_str(stripped);
+                        entries.push(entry);
+                    }
                 }
             }
             _ => {}
         }
     }
 
-    Ok(result)
+    Ok((entries, matches))
 }
 
 pub fn collect_wiki_urls<'a>(content: &'a str) -> Vec<CowStr<'a>> {

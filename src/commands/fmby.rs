@@ -304,32 +304,25 @@ async fn search(
     #[max = 25]
     limit: Option<u8>,
 ) -> Result<(), Error> {
-    let results = crate::wiki::search_wiki(&query).await?;
-
-    let total = results.len();
     let offset = offset.unwrap_or(0) as usize;
     let limit = limit.unwrap_or(10) as usize;
+    let (entries, matches) = crate::wiki::search_wiki(&query, offset, limit).await?;
 
-    let mut shown: Vec<_> = results.into_iter().skip(offset).take(limit).collect();
-
-    let description = if shown.is_empty() {
-        "Nothing found.".to_owned()
+    let description = if entries.is_empty() {
+        "Nothing found."
     } else {
-        for s in &mut shown {
-            s.insert_str(0, "- ");
-        }
-        shown.join("\n")
+        &entries.join("\n")
     };
 
     let mut embed = CreateEmbed::new()
         .title(format!("Search results for `{query}`"))
-        .description(&description);
+        .description(description);
 
-    if !shown.is_empty() && shown.len() < total {
+    if !entries.is_empty() && entries.len() < matches {
         let start = offset + 1;
-        let end = offset + shown.len();
+        let end = offset + entries.len();
         embed = embed.footer(CreateEmbedFooter::new(format!(
-            "Results {start}-{end} of {total}"
+            "Results {start}-{end} of {matches}"
         )));
     }
 
