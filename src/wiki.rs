@@ -1,7 +1,19 @@
+use std::sync::Arc;
+
+use cached::once;
 use pulldown_cmark::{CowStr, Event, Parser, Tag, TagEnd};
 use regex::Regex;
 
 use crate::constants::FMHY_SINGLE_PAGE_ENDPOINT;
+
+#[once(ttl_secs = 3600)]
+async fn get_wiki_content() -> Result<Arc<String>, reqwest::Error> {
+    let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
+        .await?
+        .text()
+        .await?;
+    Ok(Arc::new(content))
+}
 
 pub async fn search_wiki(
     query: &str,
@@ -11,10 +23,7 @@ pub async fn search_wiki(
     let query = query.to_lowercase();
     let query_re = Regex::new(&format!("(?i){}", regex::escape(&query))).unwrap();
 
-    let content = reqwest::get(FMHY_SINGLE_PAGE_ENDPOINT)
-        .await?
-        .text()
-        .await?;
+    let content = get_wiki_content().await?;
 
     let mut entries = Vec::new();
     let mut matches = 0;
