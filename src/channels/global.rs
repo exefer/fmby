@@ -188,9 +188,7 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
                         )
                         .footer(CreateEmbedFooter::new(format!(
                             "Guild: {} | Channel: #{}",
-                            guild_id
-                                .name(&ctx.cache)
-                                .unwrap_or_else(|| "None".to_owned()),
+                            guild_id.name(&ctx.cache).as_deref().unwrap_or("None"),
                             message
                                 .channel(&ctx.http)
                                 .await
@@ -200,7 +198,8 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction) {
                                     Channel::GuildThread(c) => Some(c.base.name.into_string()),
                                     _ => None,
                                 })
-                                .unwrap_or_else(|| "Unknown".to_owned())
+                                .as_deref()
+                                .unwrap_or("Unknown")
                         )))
                         .timestamp(Timestamp::now()),
                 ),

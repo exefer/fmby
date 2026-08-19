@@ -212,6 +212,9 @@ async fn migrate(
             };
             let total = messages_processed + messages_skipped;
             let next_channel_id = channel_ids.get(i + 1);
+            let summary = format!(
+                "Processed: {messages_processed}\nSkipped: {messages_skipped}\nProcess rate: {process_rate:.1}% ({total})"
+            );
 
             reply
                 .edit(
@@ -220,13 +223,7 @@ async fn migrate(
                         CreateEmbed::new()
                             .title("Migration Progress")
                             .fields([
-                                (
-                                    "Messages",
-                                    format!(
-                                        "Processed: {messages_processed}\nSkipped: {messages_skipped}\nProcess rate: {process_rate:.1}% ({total})"
-                                    ),
-                                    false,
-                                ),
+                                ("Messages", summary, false),
                                 ("URLs processed", urls_processed.to_string(), false),
                                 ("Current channel", format!("<#{channel_id}>"), false),
                                 (
@@ -368,10 +365,8 @@ async fn context(
         .await?
     {
         let context = match (entry.guild_id, entry.channel_id, entry.message_id) {
-            (Some(guild_id), Some(channel_id), Some(message_id)) => {
-                format!("https://discord.com/channels/{guild_id}/{channel_id}/{message_id}")
-            }
-            _ => "Unavailable".to_owned(),
+            (Some(g), Some(c), Some(m)) => &format!("https://discord.com/channels/{g}/{c}/{m}"),
+            _ => "Unavailable",
         };
 
         ctx.send(
@@ -383,7 +378,9 @@ async fn context(
                             "Updated By",
                             entry
                                 .user_id
-                                .map_or_else(|| "Unavailable".to_owned(), |id| format!("<@{id}>")),
+                                .map(|id| format!("<@{id}>"))
+                                .as_deref()
+                                .unwrap_or("Unavailable"),
                             false,
                         )
                         .field("Context", context, false)
