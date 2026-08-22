@@ -1,8 +1,5 @@
 pub const FMHY_SINGLE_PAGE_ENDPOINT: &str = "https://api.fmhy.net/single-page";
-pub const AUTO_THREAD_MAPPINGS: &[(u64, Option<&str>)] = &[
-    (FmhyChannel::FREE_STUFF, Some("956006107564879873")),
-    (FmhyChannel::SECRET_RESOURCES, None),
-];
+pub const AUTO_THREAD_CHANNELS: &[u64] = &[FmhyChannel::FREE_STUFF, FmhyChannel::SECRET_RESOURCES];
 
 pub struct DevChannel;
 

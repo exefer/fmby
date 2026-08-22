@@ -6,7 +6,7 @@ use poise::serenity_prelude::{
 };
 use sea_orm::{ActiveValue::*, Iterable, prelude::*};
 
-use crate::constants::{AUTO_THREAD_MAPPINGS, FmhyChannel, FmhyServerRole};
+use crate::constants::{AUTO_THREAD_CHANNELS, FmhyChannel, FmhyServerRole};
 use crate::db::{get_wiki_urls_by_urls, infer_wiki_url_status, update_wiki_urls_with_message};
 use crate::entities::enums::WikiUrlStatus;
 use crate::entities::{prelude::*, wiki_urls};
@@ -16,10 +16,8 @@ use crate::types::Data;
 use crate::url::extract_urls;
 
 pub async fn on_message(ctx: &Context, message: &Message) {
-    for (channel_id, needle) in AUTO_THREAD_MAPPINGS {
-        if message.channel_id.get() == *channel_id
-            && needle.is_none_or(|n| message.content.contains(n))
-        {
+    for channel_id in AUTO_THREAD_CHANNELS {
+        if message.channel_id.get() == *channel_id {
             let _ = message
                 .channel_id
                 .expect_channel()
